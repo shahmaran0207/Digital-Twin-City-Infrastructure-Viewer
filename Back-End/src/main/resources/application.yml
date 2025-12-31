@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: Busan-CityView
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/YOUR_DB   # 변경 필요
+    username: YOUR_USERNAME                         # 변경 필요
+    password: YOUR_PASSWORD
+    driver-class-name: org.postgresql.Driver        # 변경 필요
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+        dialect: org.hibernate.spatial.dialect.PostgreSQLPGObjectDialect
+
+  jackson:
+    time-zone: Asia/Seoul
+
+server:
+  port: 8000
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
