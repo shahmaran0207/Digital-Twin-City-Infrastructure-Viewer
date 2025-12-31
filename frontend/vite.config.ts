@@ -5,10 +5,10 @@ import cesium from 'vite-plugin-cesium'
 export default defineConfig({
   plugins: [react(), cesium()],
   server: {
-    port: 3000,
+    port: 5000,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:8030',
         changeOrigin: true,
         secure: false,
         // rewrite: (path) => path.replace(/^\/api/, '') // API 경로에서 /api 제거하려면
