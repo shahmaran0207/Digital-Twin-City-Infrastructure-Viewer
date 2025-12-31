@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="data">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/data/LSMD_CONT_ZB001_부산.zip!/" />
+      <root url="jar://$PROJECT_DIR$/data/부산광역시 교통정보서비스센터 보유 ITS CCTV 현황.zip!/" />
+      <root url="jar://$PROJECT_DIR$/data/south-korea-251229-free.shp.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
