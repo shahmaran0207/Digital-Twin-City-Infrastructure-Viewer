@@ -1,0 +1,16 @@
+CREATE TABLE "DigitalTwin".traffic_lane (
+	id numeric NOT NULL,
+	sigun_gu varchar(300) NULL,
+	lon float8 NULL,
+	lat float8 NULL,
+	geom public.geometry(point, 4326) NULL,
+	facility_type numeric NULL,
+	CONSTRAINT traffic_lane_pk PRIMARY KEY (id)
+);
+
+데이터 추가 후 
+UPDATE "DigitalTwin".traffic_lane
+SET geom = ST_SetSRID(
+                ST_Point(lon, lat), 
+                4326
+           );

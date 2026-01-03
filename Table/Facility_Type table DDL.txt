@@ -1,0 +1,7 @@
+CREATE TABLE "DigitalTwin".facility_type (
+	id varchar(300) NOT NULL,
+	facility_type numeric NOT NULL,
+	facility_type_name varchar(300) NULL,
+	CONSTRAINT facility_type_pk PRIMARY KEY (id),
+	CONSTRAINT facility_type_unique UNIQUE (facility_type)
+);
