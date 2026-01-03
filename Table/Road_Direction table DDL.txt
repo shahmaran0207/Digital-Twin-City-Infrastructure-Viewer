@@ -1,0 +1,27 @@
+CREATE TABLE "DigitalTwin".road_direction (
+	id numeric NOT NULL,
+	sigun_gu varchar(300) NULL,
+	lon double precision NULL,
+	lat double precision NULL,
+	geom public.geometry(point, 4326) NULL,
+	facility_type numeric NULL,
+	CONSTRAINT road_direction_pk PRIMARY KEY (id)
+);
+COMMENT ON TABLE "DigitalTwin".road_direction IS '노면방향표시 정보';
+
+-- Column comments
+
+COMMENT ON COLUMN "DigitalTwin".road_direction.id IS '노면 방향표시정보 고유 ID';
+COMMENT ON COLUMN "DigitalTwin".road_direction.sigun_gu IS '시군구 정보';
+COMMENT ON COLUMN "DigitalTwin".road_direction.lon IS '경도';
+COMMENT ON COLUMN "DigitalTwin".road_direction.lat IS '위도';
+COMMENT ON COLUMN "DigitalTwin".road_direction.geom IS 'geom 데이터';
+COMMENT ON COLUMN "DigitalTwin".road_direction.facility_type IS '시설물 타입 넘버';
+
+
+데이터 추가 후 
+UPDATE "DigitalTwin".road_direction
+SET geom = ST_SetSRID(
+                ST_Point(lon, lat), 
+                4326
+           );

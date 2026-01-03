@@ -1,0 +1,26 @@
+CREATE TACREATE TABLE "DigitalTwin".attachment_board (
+	id numeric NOT NULL,
+	sigun_gu varchar(300) NULL,
+	lon double precision NULL,
+	lat double precision NULL,
+	geom public.geometry(point, 4326) NULL,
+	facility_type numeric NULL,
+	CONSTRAINT attachment_board_pk PRIMARY KEY (id)
+);
+COMMENT ON TABLE "DigitalTwin".attachment_board IS '부착대 정보 테이블';
+
+-- Column comments
+
+COMMENT ON COLUMN "DigitalTwin".attachment_board.id IS '부착대 정보 고유 id';
+COMMENT ON COLUMN "DigitalTwin".attachment_board.sigun_gu IS '시군구 정보';
+COMMENT ON COLUMN "DigitalTwin".attachment_board.lon IS '경도';
+COMMENT ON COLUMN "DigitalTwin".attachment_board.lat IS '위도';
+COMMENT ON COLUMN "DigitalTwin".attachment_board.geom IS 'geom 데이터';
+COMMENT ON COLUMN "DigitalTwin".attachment_board.facility_type IS '시설물 타입 넘버';
+
+
+UPDATE "DigitalTwin".attachment_board
+SET geom = ST_SetSRID(
+                ST_Point(lon, lat), 
+                4326
+           );

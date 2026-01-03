@@ -1,0 +1,25 @@
+CREATE TABLE "DigitalTwin".road_sign (
+	id numeric NOT NULL,
+	sigun_gu varchar(300) NULL,
+	lon double precision NULL,
+	lat double precision NULL,
+	geom public.geometry(point, 4326) NULL,
+	facility_type numeric NULL,
+	CONSTRAINT road_sign_pk PRIMARY KEY (id)
+);
+COMMENT ON TABLE "DigitalTwin".road_sign IS '노면문자 표시 테이블';
+
+-- Column comments
+
+COMMENT ON COLUMN "DigitalTwin".road_sign.id IS '노면표시 고유 id';
+COMMENT ON COLUMN "DigitalTwin".road_sign.sigun_gu IS '시군구 정보';
+COMMENT ON COLUMN "DigitalTwin".road_sign.lon IS '경도';
+COMMENT ON COLUMN "DigitalTwin".road_sign.lat IS '위도';
+COMMENT ON COLUMN "DigitalTwin".road_sign.geom IS 'geom 데이터 정보';
+COMMENT ON COLUMN "DigitalTwin".road_sign.facility_type IS '시설물 타입 넘버';
+
+UPDATE "DigitalTwin".road_sign
+SET geom = ST_SetSRID(
+                ST_Point(lon, lat), 
+                4326
+           );

@@ -1,0 +1,26 @@
+CREATE TABLE "DigitalTwin".safety_signal (
+	id numeric NOT NULL,
+	sigun_gu varchar(300) NULL,
+	lon double precision NULL,
+	lat double precision NULL,
+	geom public.geometry(point, 4326) NULL,
+	facility_type numeric NULL,
+	CONSTRAINT safety_signal_pk PRIMARY KEY (id)
+);
+COMMENT ON TABLE "DigitalTwin".safety_signal IS '안전표시 테이블';
+
+-- Column comments
+
+COMMENT ON COLUMN "DigitalTwin".safety_signal.id IS '안전표시 고유 ID';
+COMMENT ON COLUMN "DigitalTwin".safety_signal.sigun_gu IS '시군구 정보';
+COMMENT ON COLUMN "DigitalTwin".safety_signal.lon IS '경도';
+COMMENT ON COLUMN "DigitalTwin".safety_signal.lat IS '위도';
+COMMENT ON COLUMN "DigitalTwin".safety_signal.geom IS 'geom 데이터';
+COMMENT ON COLUMN "DigitalTwin".safety_signal.facility_type IS '시설물 타입 넘버';
+
+데이터 추가 후 
+UPDATE "DigitalTwin".safety_signal
+SET geom = ST_SetSRID(
+                ST_Point(lon, lat), 
+                4326
+           );

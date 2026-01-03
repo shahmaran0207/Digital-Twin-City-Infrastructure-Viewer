@@ -1,0 +1,25 @@
+CREATE TABLE "DigitalTwin".train_info (
+	id numeric NOT NULL,
+	sigun_gu varchar(300) NULL,
+	lon double precision NULL,
+	lat double precision NULL,
+	geom public.geometry(point, 4326) NULL,
+	facility_type numeric NULL,
+	CONSTRAINT train_info_pk PRIMARY KEY (id)
+);
+COMMENT ON TABLE "DigitalTwin".train_info IS '철주정보 테이블';
+
+-- Column comments
+
+COMMENT ON COLUMN "DigitalTwin".train_info.id IS '철주정보 고유 id';
+COMMENT ON COLUMN "DigitalTwin".train_info.sigun_gu IS '시군구 정보';
+COMMENT ON COLUMN "DigitalTwin".train_info.lon IS '경도';
+COMMENT ON COLUMN "DigitalTwin".train_info.lat IS '위도';
+COMMENT ON COLUMN "DigitalTwin".train_info.geom IS 'geom 데이터';
+COMMENT ON COLUMN "DigitalTwin".train_info.facility_type IS '시설물 타입 넘버';
+
+UPDATE "DigitalTwin".train_info
+SET geom = ST_SetSRID(
+                ST_Point(lon, lat), 
+                4326
+           );

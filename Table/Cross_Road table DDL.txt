@@ -1,0 +1,25 @@
+CREATE TABLE "DigitalTwin".cross_road (
+	id numeric NOT NULL,
+	sigun_gu varchar(300) NULL,
+	lon double precision NULL,
+	lat double precision NULL,
+	geom public.geometry(point, 4326) NULL,
+	facility_type numeric NULL,
+	CONSTRAINT cross_road_pk PRIMARY KEY (id)
+);
+COMMENT ON TABLE "DigitalTwin".cross_road IS '교차로 테이블';
+
+-- Column comments
+
+COMMENT ON COLUMN "DigitalTwin".cross_road.id IS '교차로 고유 id';
+COMMENT ON COLUMN "DigitalTwin".cross_road.sigun_gu IS '시군구 정보';
+COMMENT ON COLUMN "DigitalTwin".cross_road.lon IS '경도';
+COMMENT ON COLUMN "DigitalTwin".cross_road.lat IS '위도';
+COMMENT ON COLUMN "DigitalTwin".cross_road.geom IS 'geom 데이터';
+COMMENT ON COLUMN "DigitalTwin".cross_road.facility_type IS '시설물 타입 넘버';
+
+UPDATE "DigitalTwin".cross_road
+SET geom = ST_SetSRID(
+                ST_Point(lon, lat), 
+                4326
+           );

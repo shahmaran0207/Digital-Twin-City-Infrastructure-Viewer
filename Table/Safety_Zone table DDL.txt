@@ -1,0 +1,25 @@
+CREATE TABLE "DigitalTwin".safety_zone (
+	id numeric NOT NULL,
+	sigun_gu varchar(300) NULL,
+	lon double precision NULL,
+	lat double precision NULL,
+	geom public.geometry(point, 4326) NULL,
+	facility_type numeric NULL,
+	CONSTRAINT safety_zone_pk PRIMARY KEY (id)
+);
+COMMENT ON TABLE "DigitalTwin".safety_zone IS '안전지대 테이블';
+
+-- Column comments
+
+COMMENT ON COLUMN "DigitalTwin".safety_zone.id IS '안전지대 공유 id';
+COMMENT ON COLUMN "DigitalTwin".safety_zone.sigun_gu IS '시군구 정보';
+COMMENT ON COLUMN "DigitalTwin".safety_zone.lon IS '경도';
+COMMENT ON COLUMN "DigitalTwin".safety_zone.lat IS '위도';
+COMMENT ON COLUMN "DigitalTwin".safety_zone.geom IS 'geom 데이터';
+COMMENT ON COLUMN "DigitalTwin".safety_zone.facility_type IS '시설물 타입 넘버';
+
+UPDATE "DigitalTwin".safety_zone
+SET geom = ST_SetSRID(
+                ST_Point(lon, lat), 
+                4326
+           );
