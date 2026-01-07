@@ -1,0 +1,26 @@
+CREATE TABLE "DigitalTwin".smart_shelter (
+	id numeric NOT NULL,
+	sigun_gu varchar(300) NULL,
+	lon double precision NULL,
+	lat double precision NULL,
+	geom public.geometry(point, 4326) NULL,
+	facility_type numeric NULL,
+	CONSTRAINT smart_shelter_pk PRIMARY KEY (id)
+);
+COMMENT ON TABLE "DigitalTwin".smart_shelter IS '스마트 버스쉘터 테이블';
+
+-- Column comments
+
+COMMENT ON COLUMN "DigitalTwin".smart_shelter.id IS '스마트 버스쉘터 고유 ID';
+COMMENT ON COLUMN "DigitalTwin".smart_shelter.sigun_gu IS '시군구 데이터';
+COMMENT ON COLUMN "DigitalTwin".smart_shelter.lon IS '경도';
+COMMENT ON COLUMN "DigitalTwin".smart_shelter.lat IS '위도';
+COMMENT ON COLUMN "DigitalTwin".smart_shelter.geom IS 'geom 데이터';
+COMMENT ON COLUMN "DigitalTwin".smart_shelter.facility_type IS '시설물 타입 넘버';
+
+
+UPDATE "DigitalTwin".smart_shelter
+SET geom = ST_SetSRID(
+                ST_Point(lon, lat), 
+                4326
+           );

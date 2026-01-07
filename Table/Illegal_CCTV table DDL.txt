@@ -1,0 +1,26 @@
+CREATE TABLE "DigitalTwin".illigeal_cctv (
+	id numeric NOT NULL,
+	sigun_gu varchar(300) NULL,
+	lon double precision NULL,
+	lat double precision NULL,
+	geom public.geometry(point, 4326) NULL,
+	facility_type numeric NULL,
+	CONSTRAINT illigeal_cctv_pk PRIMARY KEY (id)
+);
+COMMENT ON TABLE "DigitalTwin".illigeal_cctv IS '불법주정차단속 cctv';
+
+-- Column comments
+
+COMMENT ON COLUMN "DigitalTwin".illigeal_cctv.id IS '불법 주정차 cctv 고유 ID';
+COMMENT ON COLUMN "DigitalTwin".illigeal_cctv.sigun_gu IS '시군구 정보';
+COMMENT ON COLUMN "DigitalTwin".illigeal_cctv.lon IS '경도';
+COMMENT ON COLUMN "DigitalTwin".illigeal_cctv.lat IS '위도';
+COMMENT ON COLUMN "DigitalTwin".illigeal_cctv.geom IS 'geom 데이터';
+COMMENT ON COLUMN "DigitalTwin".illigeal_cctv.facility_type IS '시설물 타입 넘버';
+
+
+UPDATE "DigitalTwin".illigeal_cctv
+SET geom = ST_SetSRID(
+                ST_Point(lon, lat), 
+                4326
+           );
