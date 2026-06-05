@@ -13,6 +13,7 @@
 |---|---|
 | 3D 시각화 (핵심) | Cesium JS (디지털 트윈 표준) 또는 deck.gl |
 | 프론트엔드 | React + Tailwind CSS |
+| 백엔드엔드 | java |
 | 데이터 처리 | Python (geopandas, pandas) |
 | GIS 전처리 | QGIS (좌표계 변환, 레이어 정리) |
 | 지도 베이스 | OpenStreetMap + 부산 건물 3D 레이어 |
