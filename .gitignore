@@ -1,0 +1,15 @@
+# 비밀정보 — 모든 .env 변형 (하위 폴더 포함), 템플릿만 예외
+.env
+.env.*
+!.env.example
+
+# 빌드 산출물 / 캐시
+Back-End/build/
+Back-End/.gradle/
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+Back-End/.idea/
+*.iml

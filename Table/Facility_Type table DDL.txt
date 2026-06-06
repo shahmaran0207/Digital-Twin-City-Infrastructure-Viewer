@@ -1,7 +1,19 @@
-CREATE TABLE "DigitalTwin".facility_type (
-	id varchar(300) NOT NULL,
-	facility_type numeric NOT NULL,
-	facility_type_name varchar(300) NULL,
-	CONSTRAINT facility_type_pk PRIMARY KEY (id),
-	CONSTRAINT facility_type_unique UNIQUE (facility_type)
+-- 시설물 유형 코드 테이블 (원본: migrations/V1__init_schema.sql)
+-- 시드 데이터: migrations/V2__seed_facility_type.sql
+
+CREATE TABLE IF NOT EXISTS digital_twin.facility_type (
+    code        integer      NOT NULL,
+    name        varchar(50)  NOT NULL,
+    name_ko     varchar(100) NOT NULL,
+    category    varchar(30)  NOT NULL,
+    category_ko varchar(50)  NOT NULL,
+    CONSTRAINT facility_type_pk PRIMARY KEY (code),
+    CONSTRAINT facility_type_name_uq UNIQUE (name)
 );
+
+COMMENT ON TABLE  digital_twin.facility_type             IS '시설물 유형 코드 테이블';
+COMMENT ON COLUMN digital_twin.facility_type.code        IS '시설물 타입 코드 (원천 CSV의 facility_type 값)';
+COMMENT ON COLUMN digital_twin.facility_type.name        IS '시설물 유형 영문 키 (API/프론트 레이어 키)';
+COMMENT ON COLUMN digital_twin.facility_type.name_ko     IS '시설물 유형 한글명';
+COMMENT ON COLUMN digital_twin.facility_type.category    IS '레이어 카테고리 영문 키 (traffic/safety/road_facility/transit/living)';
+COMMENT ON COLUMN digital_twin.facility_type.category_ko IS '레이어 카테고리 한글명';

@@ -1,0 +1,39 @@
+-- 통합 시설물 테이블 (원본: migrations/V1__init_schema.sql)
+-- 기존 동일 구조 13개 테이블(safety_cctv, cross_road, city_park, ...)을 통합
+-- 시설물 구분은 facility_type 컬럼 (facility_type 테이블 참조)
+
+CREATE TABLE IF NOT EXISTS digital_twin.facility (
+    id            bigint GENERATED ALWAYS AS IDENTITY,
+    facility_type integer          NOT NULL,
+    source_id     varchar(50)      NULL,
+    sigungu       varchar(50)      NULL,
+    name          varchar(200)     NULL,
+    lon           double precision NOT NULL,
+    lat           double precision NOT NULL,
+    props         jsonb            NULL,
+    geom          geometry(Point, 4326)
+                  GENERATED ALWAYS AS (ST_SetSRID(ST_MakePoint(lon, lat), 4326)) STORED,
+    CONSTRAINT facility_pk PRIMARY KEY (id),
+    CONSTRAINT facility_type_fk FOREIGN KEY (facility_type)
+        REFERENCES digital_twin.facility_type (code),
+    CONSTRAINT facility_lon_range CHECK (lon > 128.5 AND lon < 129.5),
+    CONSTRAINT facility_lat_range CHECK (lat > 34.8  AND lat < 35.7)
+);
+
+COMMENT ON TABLE  digital_twin.facility               IS '통합 시설물 테이블 (전 시설물 포인트, facility_type으로 구분)';
+COMMENT ON COLUMN digital_twin.facility.id            IS '내부 고유 ID (자동 증가)';
+COMMENT ON COLUMN digital_twin.facility.facility_type IS '시설물 타입 코드 (facility_type.code 참조)';
+COMMENT ON COLUMN digital_twin.facility.source_id     IS '원천 데이터의 id';
+COMMENT ON COLUMN digital_twin.facility.sigungu       IS '시군구';
+COMMENT ON COLUMN digital_twin.facility.name          IS '시설물 명칭 (있는 경우)';
+COMMENT ON COLUMN digital_twin.facility.lon           IS '경도 (EPSG:4326)';
+COMMENT ON COLUMN digital_twin.facility.lat           IS '위도 (EPSG:4326)';
+COMMENT ON COLUMN digital_twin.facility.props         IS '시설물별 추가 속성 (예: ITS CCTV 스트림 url)';
+COMMENT ON COLUMN digital_twin.facility.geom          IS 'lon/lat에서 자동 생성되는 포인트 지오메트리 (GENERATED)';
+
+-- 인덱스
+CREATE INDEX IF NOT EXISTS idx_facility_geom    ON digital_twin.facility USING gist (geom);
+CREATE INDEX IF NOT EXISTS idx_facility_type    ON digital_twin.facility (facility_type);
+CREATE INDEX IF NOT EXISTS idx_facility_sigungu ON digital_twin.facility (sigungu);
+
+-- geom은 GENERATED 컬럼이므로 기존의 수동 UPDATE(ST_SetSRID(ST_Point(lon,lat),4326)) 불필요
