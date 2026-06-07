@@ -108,7 +108,10 @@
 > (예: 노면방향표시 원본의 동명·리명·도로명·교차로명 제거, geom은 빈 placeholder).
 > **실제 데이터를 새로 확보해 테이블 설계와 가공을 처음부터 다시 한다.**
 
-- [ ] 실제 원천 데이터 새로 수집 (담당: 사용자)
+- [x] 원천 데이터 출처 조사 → [data/SOURCES.md](data/SOURCES.md) (2026-06-07)
+  - 교통안전시설 8종 = 공공데이터포털 "교통시설물관리시스템" 시리즈, 방범CCTV·버스쉘터는 최신 버전 존재
+  - `_00` 접미사 2종(15분 도시공원, 어린이보호구역 CCTV)은 출처 미확정 — Big-데이터웨이브 추정
+- [ ] 실제 원천 데이터 새로 수집 (담당: 사용자) — SOURCES.md의 재수집 체크리스트 기준, **원본 컬럼 가공 없이 보존**
 - [ ] 새 원천 데이터 구조 분석: 파일별 컬럼/타입/결측/좌표 형식 파악, 보존할 컬럼 결정
 - [ ] **테이블 재설계**: 새 데이터 컬럼 기준으로 `facility` 스키마 재검토
   - 통합 테이블 유지 여부, 부가 정보(주소·동명 등) → props(jsonb) vs 정식 컬럼 결정
@@ -222,3 +225,4 @@
 | [migrations/README.md](migrations/README.md) | DB 스키마 재설계 + 마이그레이션/적재 가이드 | ✅ 완료 |
 | [data/processed/REPORT.md](data/processed/REPORT.md) | 데이터 1차 가공 리포트 (보정/제거 내역) | ✅ 완료 |
 | [plans/phase0-redesign.md](plans/phase0-redesign.md) | Phase 0 설계 원칙 — 아키텍처, API 규칙, 좌표 포맷, 프론트 구조, 컨벤션 | ✅ 완료 |
+| [data/SOURCES.md](data/SOURCES.md) | 원천 데이터 출처 목록 + 재수집 체크리스트 (Phase 1-R용) | ✅ 작성 |
