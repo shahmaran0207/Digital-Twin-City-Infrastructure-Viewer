@@ -96,6 +96,10 @@
 - [x] 스키마 재설계: 동일 구조 13개 테이블 → **통합 `facility` + `facility_type` 룩업** (`digital_twin` 스키마)
 - [x] 마이그레이션 작성·적재·검증 (`migrations/` — geom GENERATED + GIST 인덱스)
 - [x] PostGIS 3.6.2 설치 (로컬 PG18, 5432) / `.env` 외부화 / gitignore 정비
+- [x] CSV 인코딩 UTF-8 BOM 통일 (2026-06-07)
+  - 원천 CSV 12종 CP949 → UTF-8 BOM (깃허브에서 한글이 한자로 깨지던 문제 해결)
+  - 가공 출력 `facility_all.csv`도 UTF-8 BOM으로 (엑셀에서 한글 깨지던 문제 해결)
+  - 검증: 변환 전후 가공 결과 SHA256 해시 일치 (무손실), DB 적재는 HEADER 스킵으로 영향 없음
 - [ ] ~~행정경계 레이어~~ 보류: LSMD zip은 지적재조사지구로 판명 — Phase 4에서 시군구 경계 필요 여부 재결정
 
 # Phase 2. 백엔드 API ⬜ (Phase 0 완료 후)

@@ -7,7 +7,7 @@ data 폴더 원천 CSV/SHP 1차 가공 스크립트
 - 복구 불가 행 제거 (결측 / 파싱 불가 / 부산 범위 밖)
 - 결측 id / facility_type 채움
 - ITS CCTV shapefile → facility_type 12로 추출 (name, url 포함)
-- 출력: processed/facility_all.csv (UTF-8) + processed/REPORT.md
+- 출력: processed/facility_all.csv (UTF-8 BOM) + processed/REPORT.md
 
 실행: py data/process_data.py
 """
@@ -184,9 +184,9 @@ def main():
     all_stats.append(stats)
     print(f"[12] {stats['file']}: {stats['total']} -> {stats['kept']}")
 
-    # 통합 CSV (DB 임포트용, UTF-8)
+    # 통합 CSV (DB 임포트용, UTF-8 BOM — 엑셀에서 한글 깨짐 방지, psql은 HEADER 스킵으로 무관)
     out_csv = os.path.join(OUT_DIR, 'facility_all.csv')
-    with open(out_csv, 'w', encoding='utf-8', newline='') as f:
+    with open(out_csv, 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.writer(f)
         w.writerow(['facility_type', 'source_id', 'sigungu', 'name', 'lon', 'lat', 'props'])
         w.writerows(all_rows)
