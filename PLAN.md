@@ -22,12 +22,12 @@
 > 목표: 이후 모든 기능이 올라갈 **뼈대를 완성**한다. 기능 추가 없이 구조만 완벽하게.
 > 완료 기준: 백엔드 기동 → 신규 스키마 조회 E2E 통과 + 프론트 빌드/린트 클린
 
-## 0-1. 설계 원칙 확정 (코드 작성 전 결정 사항)
-- [ ] 백엔드 아키텍처 스타일 확정: 레이어드(Controller→Service→Repository) + 도메인 패키지 구분
-- [ ] API 설계 규칙 확정: URL 네이밍(복수형/kebab), 응답 envelope 여부, 에러 응답 포맷(RFC 7807 ProblemDetail 검토), 페이징 규약
-- [ ] 좌표 데이터 전달 포맷 확정: 일반 JSON(lon/lat) vs GeoJSON — Cesium 소비 형태 기준으로 결정
-- [ ] 프론트 상태관리/폴더 구조 확정: feature 단위 구조, 서버상태(TanStack Query 도입 여부) vs 수동 fetch
-- [ ] 네이밍/컨벤션 문서화: 커밋 메시지 규칙, 브랜치 전략(main + feature/*), 코드 스타일
+## 0-1. 설계 원칙 확정 (코드 작성 전 결정 사항) ✅ → [plans/phase0-redesign.md](plans/phase0-redesign.md)
+- [x] 백엔드 아키텍처 스타일 확정: 레이어드 + `global`/`domain` 패키지 구분, 소문자 패키지명
+- [x] API 설계 규칙 확정: 복수형 kebab-case / 단건 envelope 없음·목록은 `count·truncated·items` 래퍼 / RFC 7807 ProblemDetail + `code` 필드 / 페이징 미도입(`limit` 규약)
+- [x] 좌표 데이터 전달 포맷 확정: 포인트 = 일반 JSON(lon/lat), 폴리곤(위기레벨 격자) = GeoJSON
+- [x] 프론트 상태관리/폴더 구조 확정: feature 단위 구조 + TanStack Query 도입
+- [x] 네이밍/컨벤션 문서화: 커밋 `type: 제목`, 브랜치 main + feature/*, 코드 스타일 표 작성
 
 ## 0-2. 백엔드 프로젝트 기반 정비
 - [ ] `setting.gradle` → `settings.gradle` 파일명 교정 + `rootProject.name` 설정
@@ -202,4 +202,4 @@
 |---|---|---|
 | [migrations/README.md](migrations/README.md) | DB 스키마 재설계 + 마이그레이션/적재 가이드 | ✅ 완료 |
 | [data/processed/REPORT.md](data/processed/REPORT.md) | 데이터 1차 가공 리포트 (보정/제거 내역) | ✅ 완료 |
-| plans/phase0-redesign.md (예정) | Phase 0 재설계 상세 — 패키지 구조, API 규칙, 컨벤션 | ⬜ |
+| [plans/phase0-redesign.md](plans/phase0-redesign.md) | Phase 0 설계 원칙 — 아키텍처, API 규칙, 좌표 포맷, 프론트 구조, 컨벤션 | ✅ 완료 |
