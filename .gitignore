@@ -13,3 +13,9 @@ frontend/dist/
 .idea/
 Back-End/.idea/
 *.iml
+
+# 대용량 GIS 원천 zip — GitHub 100MB 제한 초과/근접하여 git에 올리지 않음 (출처·재다운로드 방법은 data/SOURCES.md)
+data/한반도.zip
+data/AL_D1*.zip
+data/*NODELINKDATA.zip
+data/emd_*.zip
