@@ -54,6 +54,14 @@ Invoke-Psql @('-f', (Join-Path $MigrationDir 'V1__init_schema.sql'))
 Write-Host '== V2: facility_type 시드 =='
 Invoke-Psql @('-f', (Join-Path $MigrationDir 'V2__seed_facility_type.sql'))
 
+# V3~V7: 시뮬레이션/경계 테이블 DDL (건물·노드링크·대피장소·격자인구·읍면동·DEM)
+#   테이블 적재는 가공 재작업(process_data.py) 완료 후 별도 단계에서 수행
+Write-Host '== V3~V7: 시뮬레이션/경계 테이블 DDL =='
+foreach ($v in @('V3__building.sql','V4__road_network.sql','V5__shelter_population.sql','V6__admin_emd.sql','V7__dem.sql')) {
+    Write-Host "   - $v"
+    Invoke-Psql @('-f', (Join-Path $MigrationDir $v))
+}
+
 Write-Host '== facility 적재 =='
 Invoke-Psql @('-c', 'TRUNCATE digital_twin.facility RESTART IDENTITY')
 $copyCmd = "\copy digital_twin.facility (facility_type, source_id, sigungu, name, lon, lat, props) FROM '$CsvPath' WITH (FORMAT csv, HEADER true, NULL '')"

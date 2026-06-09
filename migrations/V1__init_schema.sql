@@ -74,3 +74,5 @@ COMMENT ON COLUMN digital_twin.facility.geom          IS 'lon/lat에서 자동 �
 CREATE INDEX IF NOT EXISTS idx_facility_geom    ON digital_twin.facility USING gist (geom);
 CREATE INDEX IF NOT EXISTS idx_facility_type    ON digital_twin.facility (facility_type);
 CREATE INDEX IF NOT EXISTS idx_facility_sigungu ON digital_twin.facility (sigungu);
+-- 유형별 부가속성은 전부 props(jsonb)에 보관하므로, 동/도로명 등 키 조회용 GIN 인덱스
+CREATE INDEX IF NOT EXISTS idx_facility_props   ON digital_twin.facility USING gin (props);
