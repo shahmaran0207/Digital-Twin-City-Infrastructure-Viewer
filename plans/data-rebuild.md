@@ -70,12 +70,16 @@
   - 분리 이유: facility는 자주 돌리는 핵심·가벼움 / sim은 무겁고 pyproj 의존·드물게 실행.
 
 ## 진행 단계 (각 단계 뒤 적재·건수 검증 게이트)
-1. **facility 재생성** (CSV12+ITS) → 적재 → 유형별 건수 검증  ★백엔드 즉시 의존
-2. **building** 23만 → EWKT CSV → 적재
-3. **road_node/link** 부산 추출 → 적재 → 토폴로지(source/target)
-4. **admin_emd** 부산 추출 → 적재 (+ sigungu 뷰 확인)
+1. ✅ **facility 재생성** (CSV12+ITS) → 적재 **209,578** → 유형별 건수 검증 통과 (2026-06-10 적재)
+2. ✅ **building** 23만 → EWKT CSV → 적재 **234,446** (ST_MakeValid 68건 보정)
+3. ✅ **road_node/link** 부산 추출 → 적재 node **61,121** / link **86,896** → source/target 전건 부여
+4. ✅ **admin_emd** 부산 추출 → 적재 **192** (+ admin_sigungu dissolve 뷰 확인)
 5. ~~DEM raster2pgsql~~ → Phase 5
 6. ~~shelter/population_grid~~ → 데이터 확보 후
+
+> 2026-06-10 1~4단계 가공·적재·검증 완료. 적재 결과는 `processed/REPORT.md` 참조.
+> 결정 보강: 도로 링크 부산 추출은 **양끝 노드 모두 부산**(라우팅 source/target 무결성).
+> nodes/links prj(ITRF2000 중부원점)는 EPSG:5186과 cm급 차이라 5186으로 처리.
 
 ## 검증 기준
 - 적재 건수 = 가공 출력 행수(부산 범위/복구불가 제거분 제외)와 일치.

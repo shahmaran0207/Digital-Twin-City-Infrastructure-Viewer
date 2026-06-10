@@ -137,14 +137,14 @@
   - 통합 `facility` 유지 / 부가정보 **전부 props(jsonb)** + GIN 인덱스 (유형 늘어도 스키마 불변)
   - **시뮬레이션/경계 별도 테이블 7종**: `building`·`road_node`/`road_link`·`shelter`·`population_grid`·`admin_emd`(+시군구 뷰)·`dem_raster`
   - 마이그레이션 **V3~V7 신규 작성**, `pgrouting`·`postgis_raster` 확장 설치 + 빈 DB DDL 적용 검증 통과 (적재는 가공 후)
-- [ ] **데이터 가공 재작업** 🔄 → [plans/data-rebuild.md](plans/data-rebuild.md) (2026-06-09 설계 확정)
+- [x] **데이터 가공 재작업** ✅ (1~4단계 완료, 2026-06-10) → [plans/data-rebuild.md](plans/data-rebuild.md)
   - 결정: 범위 = facility + 시뮬레이션 테이블 전체 / props = 원천 컬럼 전부 보존(한글 키) / DEM·shelter·population_grid 보류
   - [x] **1단계 facility 가공** (2026-06-09): `process_data.py` 재작성 — 좌표는 헤더 무시·값 범위로 lon/lat 자동판별(파일별 순서 제각각), props는 좌표·명칭 제외 전 컬럼 한글 키 보존 → `facility_all.csv` **209,578행** 재생성
     - 제거 59건 = 빈좌표(차선38)·범위밖 대만좌표(노면11)·소수점중복(방범CCTV7), 전부 원천 오류 (REPORT.md 기록)
-  - [ ] 2단계 building: `AL_D162_26_20260115.shp` 23만 폴리곤(EPSG:5186→4326) → EWKT CSV
-  - [ ] 3단계 road_node/link: 표준노드링크 전국본 → 부산 추출(EPSG:5186→4326) + 토폴로지(source/target)
-  - [ ] 4단계 admin_emd: `emd.shp` 부산(코드26) 추출(prj누락 EPSG:5179가정→4326)
-- [ ] **DB 재적재 + 검증** (건수 대조, geom 자동 생성 확인, 부산 좌표 범위 검증) — 단계별 적재 (1단계 적재 대기 중)
+  - [x] **2단계 building** (2026-06-10): `AL_D162_26_20260115.shp` **234,446** 폴리곤(EPSG:5186→4326) → `building.csv` (EWKT MultiPolygon, `process_sim.py`)
+  - [x] **3단계 road_node/link** (2026-06-10): 표준노드링크 전국본 → 부산 추출 — node **61,121**(BBox 내) / link **86,896**(양끝 노드 모두 부산), source/target 적재 후 전건 부여
+  - [x] **4단계 admin_emd** (2026-06-10): `emd.shp` 부산(코드26) **192**건 추출(prj누락 EPSG:5179→4326) + `admin_sigungu` dissolve 뷰
+- [x] **DB 재적재 + 검증** ✅ (2026-06-10): facility 209,578 / building 234,446 / road_node 61,121 / road_link 86,896 / admin_emd 192 적재. 전 테이블 SRID=4326·ST_IsValid 통과(building 68·emd 3건 ST_MakeValid 보정)·부산 좌표 범위 확인. `import_data.ps1`에 EWKT \copy + source/target 부여 단계 추가
 - [ ] 영향 범위 반영: Phase 0-3 엔티티/DTO가 새 스키마와 정합하는지 확인
 
 # Phase 2. 백엔드 API ⬜ (Phase 0 완료 후)
@@ -279,4 +279,4 @@
 | [plans/phase0-redesign.md](plans/phase0-redesign.md) | Phase 0 설계 원칙 — 아키텍처, API 규칙, 좌표 포맷, 프론트 구조, 컨벤션 | ✅ 완료 |
 | [data/SOURCES.md](data/SOURCES.md) | 데이터 출처 총정리 — 보유분 출처 + 실시간 API + 추가 데이터셋 + 수집 우선순위 | ✅ 작성 |
 | [plans/simulation.md](plans/simulation.md) | 시뮬레이션 기능 설계 — 후보 5종, 필요 데이터, 난이도, 추천 조합 A/B/C | ✅ 작성 (채택안 결정 대기) |
-| [plans/data-rebuild.md](plans/data-rebuild.md) | 데이터 가공 재작업 설계 — 원천→테이블 매핑, 좌표 자동판별, props 규칙, 단계별 진행 | 🔄 진행 중 (1단계 완료) |
+| [plans/data-rebuild.md](plans/data-rebuild.md) | 데이터 가공 재작업 설계 — 원천→테이블 매핑, 좌표 자동판별, props 규칙, 단계별 진행 | ✅ 1~4단계 완료 (5·6 보류) |

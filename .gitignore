@@ -19,3 +19,10 @@ data/한반도.zip
 data/AL_D1*.zip
 data/*NODELINKDATA.zip
 data/emd_*.zip
+
+# 시뮬레이션/경계 가공 산출물 — 위 gitignore zip에서 'py data/process_sim.py'로 재생성
+#   (building.csv 210MB로 GitHub 100MB 제한 초과 / 전부 파생 산출물이라 git 제외)
+data/processed/building.csv
+data/processed/road_node.csv
+data/processed/road_link.csv
+data/processed/admin_emd.csv
