@@ -56,11 +56,12 @@ py data/process_data.py
 | 8 | cross_road | 교차로 | 교통 인프라 |
 | 9 | city_park | 도시공원 | 생활공간 |
 | 10 | smart_shelter | 스마트 버스쉘터 | 대중교통 |
-| 11 | illegal_parking_cctv | 어린이보호구역 단속 CCTV | 안전·방범 |
+| 11 | child_protection_zone | 어린이보호구역 | 안전·방범 |
 | 12 | its_cctv | ITS 교통 CCTV | 교통 인프라 |
 
 기존 테이블명 대비: `road_sign`→`road_mark`(노면문자), `safety_signal`→`safety_sign`(안전표지),
-`train_info`→`steel_pole`(철주 오역 교정), `illigeal_cctv`→`illegal_parking_cctv`(오타 교정)
+`train_info`→`steel_pole`(철주 오역 교정).
+code 11은 전국어린이보호구역표준데이터 대체(2026-06-15)로 `child_protection_zone`(어린이보호구역)으로 변경 — 구 단속CCTV(`illegal_parking_cctv`)에서 보호구역 자체 데이터로 전환.
 
 ## 백엔드 반영 필요 사항 (별도 작업)
 

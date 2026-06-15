@@ -115,7 +115,7 @@
 - [x] 실제 원천 데이터 재수집 — **11종 완료** (2026-06-07, 원본 컬럼 보존 확인 / 어린이보호구역 제외)
   - 방범CCTV 12,168 → **21,060행**으로 증가 + 장비종류·시설명칭 컬럼 추가, 교차로는 지번·코드 포함 12컬럼
   - ⚠️ **정정(2026-06-08)**: 어린이보호구역 CCTV는 원본 교체 실패 — 실제로는 **구가공본(컬럼 축소, 41행)뿐**임을 구조 분석에서 확인
-- [x] **어린이보호구역 CCTV 원본 재확보** — 전국어린이보호구역표준데이터(15012891)로 **대체 완료(2026-06-15)**: 전국본→부산 **809건** 가공(보호구역 자체 위치, 구 단속CCTV 가공본 40건 대체). 좌표 위도/경도 컬럼 명시·시군구는 주소에서 추출, `facility_type` code 11을 `child_protection_zone`(어린이보호구역)으로 변경. ⚠️ **DB 재적재는 미실행**(V2 변경분 재적용 필요)
+- [x] **어린이보호구역 CCTV 원본 재확보** — 전국어린이보호구역표준데이터(15012891)로 **대체 완료(2026-06-15)**: 전국본→부산 **809건** 가공(보호구역 자체 위치, 구 단속CCTV 가공본 40건 대체). 좌표 위도/경도 컬럼 명시·시군구는 주소에서 추출, `facility_type` code 11을 `child_protection_zone`(어린이보호구역)으로 변경. **DB 재적재 완료(2026-06-15)**: facility 210,346, code 11 어린이보호구역 809건 적재 확인
 - [x] 실시간 API·추가 데이터셋 조사 (2026-06-07) → [data/SOURCES.md](data/SOURCES.md) B·C·D절
   - 실시간: BIMS 버스위치, 링크소통(속도), ITS CCTV 영상, 에어코리아, 기상청, 재난문자, 조위, EV충전기 등
   - 정적 추가: GIS건물통합정보(3D), DEM, 표준노드링크, 시군구 경계, 대피장소, 격자인구 등
@@ -144,7 +144,7 @@
   - [x] **2단계 building** (2026-06-10): `AL_D162_26_20260115.shp` **234,446** 폴리곤(EPSG:5186→4326) → `building.csv` (EWKT MultiPolygon, `process_sim.py`)
   - [x] **3단계 road_node/link** (2026-06-10): 표준노드링크 전국본 → 부산 추출 — node **61,121**(BBox 내) / link **86,896**(양끝 노드 모두 부산), source/target 적재 후 전건 부여
   - [x] **4단계 admin_emd** (2026-06-10): `emd.shp` 부산(코드26) **192**건 추출(prj누락 EPSG:5179→4326) + `admin_sigungu` dissolve 뷰
-- [x] **DB 재적재 + 검증** ✅ (2026-06-10): facility 209,578 / building 234,446 / road_node 61,121 / road_link 86,896 / admin_emd 192 적재. 전 테이블 SRID=4326·ST_IsValid 통과(building 68·emd 3건 ST_MakeValid 보정)·부산 좌표 범위 확인. `import_data.ps1`에 EWKT \copy + source/target 부여 단계 추가
+- [x] **DB 재적재 + 검증** ✅ (2026-06-10, 어린이보호구역 대체 반영 2026-06-15): facility 210,346 / building 234,446 / road_node 61,121 / road_link 86,896 / admin_emd 192 적재. 전 테이블 SRID=4326·ST_IsValid 통과(building 68·emd 3건 ST_MakeValid 보정)·부산 좌표 범위 확인. `import_data.ps1`에 EWKT \copy + source/target 부여 단계 추가
 - [x] 영향 범위 반영: Phase 0-3 엔티티/DTO가 새 스키마와 정합하는지 확인 (2026-06-15) — 기존 `BaseFacilityEntity`/`SafetyCctvEntity`/`SafetyCctvRepository`/`FacilityPointDTO`(MyBatis `@Alias` 의존)는 전부 옛 `DigitalTwin.safety_cctv` 참조라 **새 스키마와 전혀 정합 안 됨** → Phase 0-3에서 전량 신규 작성으로 해소
 
 # Phase 2. 백엔드 API ⬜ (Phase 0 완료 후)
