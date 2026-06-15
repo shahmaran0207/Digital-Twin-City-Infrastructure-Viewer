@@ -53,8 +53,13 @@ DATASETS = [
      'id': '연번', 'sigungu': '기관', 'name': '공원명'},
     {'code': 10, 'file': '스마트 버스쉘터 설치 현황.csv',
      'id': '연번', 'sigungu': None, 'name': '정류소명'},
-    {'code': 11, 'file': '어린이보호구역 내 불법주정차 CCTV설치현황_00.csv',
-     'id': '연번', 'sigungu': None, 'name': '시설명'},
+    # 어린이보호구역: 전국어린이보호구역표준데이터(15012891)로 대체 — 보호구역 자체 데이터
+    #  · 전국본이라 region(주소)로 부산만 필터, 좌표는 위도/경도 컬럼 명시(끝 2컬럼 아님)
+    #  · 시군구 컬럼이 없어 도로명주소에서 추출(sigungu_addr)
+    {'code': 11, 'file': '전국어린이보호구역표준데이터.csv',
+     'id': None, 'sigungu': None, 'name': '대상시설명',
+     'lon': '경도', 'lat': '위도', 'region': '소재지도로명주소',
+     'sigungu_addr': '소재지도로명주소'},
 ]
 # ITS CCTV: shapefile (인코딩 utf-8), 필드 id/name/lng/lat/url
 ITS_ZIP = ('부산광역시 교통정보서비스센터 보유 ITS CCTV 현황.zip', 'tl_tracffic_cctv_info', 12)
@@ -97,6 +102,12 @@ def read_csv(path):
     return header, rows
 
 
+def sigungu_from_addr(addr):
+    """도로명/지번 주소에서 시군구 추출. '부산광역시 해운대구 …' → '해운대구'."""
+    parts = addr.split()
+    return parts[1] if len(parts) >= 2 else ''
+
+
 def process_csv(meta):
     code, filename = meta['code'], meta['file']
     header, rows = read_csv(os.path.join(BASE, filename))
@@ -107,9 +118,16 @@ def process_csv(meta):
         return header.index(colname) if colname and colname in header else None
 
     id_i, sgg_i, name_i = idx(meta['id']), idx(meta['sigungu']), idx(meta['name'])
-    # 좌표는 끝 2컬럼
-    lon_lat_idx = {ncol - 2, ncol - 1}
-    # props 대상: 좌표/source_id/sigungu/name 을 제외한 나머지 컬럼
+    # 좌표 컬럼: 명시(lon/lat)되면 그 컬럼, 아니면 끝 2컬럼 (값 범위로 자동 판별)
+    lon_i, lat_i = idx(meta.get('lon')), idx(meta.get('lat'))
+    if lon_i is not None and lat_i is not None:
+        lon_lat_idx = {lon_i, lat_i}
+    else:
+        lon_lat_idx = {ncol - 2, ncol - 1}
+    # 부산 필터용 주소 컬럼 / 시군구 추출용 주소 컬럼 (전국 표준데이터 대응)
+    region_i = idx(meta.get('region'))
+    sgg_addr_i = idx(meta.get('sigungu_addr'))
+    # props 대상: 좌표/source_id/sigungu/name 을 제외한 나머지 컬럼 (주소는 props에 보존)
     skip = set(lon_lat_idx)
     for i in (id_i, sgg_i, name_i):
         if i is not None:
@@ -118,11 +136,16 @@ def process_csv(meta):
 
     stats = {'file': filename, 'code': code, 'total': len(rows),
              'kept': 0, 'dropped': 0, 'drop_lines': []}
+    considered = 0  # 부산 필터 통과 행 수 (전국본일 때 '원본 행' 기준이 됨)
     out = []
     for n, r in enumerate(rows):
         if len(r) < ncol:
             r = r + [''] * (ncol - len(r))  # 짧은 행 패딩
-        coord = pick_lon_lat(r[ncol - 2], r[ncol - 1])
+        # 전국본은 부산 행만 사용 (필터 제외분은 제거 통계에 넣지 않음)
+        if region_i is not None and not r[region_i].strip().startswith('부산'):
+            continue
+        considered += 1
+        coord = pick_lon_lat(r[min(lon_lat_idx)], r[max(lon_lat_idx)])
         if coord is None:
             stats['dropped'] += 1
             if len(stats['drop_lines']) < 5:
@@ -131,7 +154,12 @@ def process_csv(meta):
         lon, lat = coord
 
         source_id = r[id_i].strip() if id_i is not None else ''
-        sigungu = r[sgg_i].strip() if sgg_i is not None else ''
+        if sgg_i is not None:
+            sigungu = r[sgg_i].strip()
+        elif sgg_addr_i is not None:
+            sigungu = sigungu_from_addr(r[sgg_addr_i].strip())
+        else:
+            sigungu = ''
         name = r[name_i].strip() if name_i is not None else ''
 
         props = {header[i]: r[i].strip() for i, _ in prop_cols if r[i].strip()}
@@ -140,6 +168,9 @@ def process_csv(meta):
         out.append((code, source_id, sigungu, name,
                     f'{lon:.7f}', f'{lat:.7f}', props_json))
     stats['kept'] = len(out)
+    # 전국본은 부산 필터 통과분을 '원본 행'으로 보고 (전국 전체 건수가 아닌)
+    if region_i is not None:
+        stats['total'] = considered
     return out, stats
 
 
@@ -214,8 +245,9 @@ def main():
                     f.write(l + '\n')
                 f.write('```\n')
         f.write('\n## 한계 / 미해결\n\n')
-        f.write('- 어린이보호구역 CCTV(code 11): 원본 미확보로 **구가공본 41행**만 적재 '
-                '(전국어린이보호구역표준데이터로 대체 검토 — data/SOURCES.md D절)\n')
+        f.write('- 어린이보호구역(code 11): 구 단속CCTV 가공본(41행)을 **전국어린이보호구역표준데이터**(15012891)로 '
+                '대체(2026-06-15). 전국본에서 도로명주소가 "부산"인 행만 추출, 좌표는 위도/경도 컬럼 명시, '
+                '시군구는 주소에서 추출. 보호구역 자체 위치 데이터라 facility_type도 child_protection_zone(어린이보호구역)으로 변경\n')
     print(f"=> {report}")
 
 

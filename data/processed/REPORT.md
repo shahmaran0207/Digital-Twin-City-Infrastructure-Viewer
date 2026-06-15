@@ -23,10 +23,10 @@
 | 8 | 부산광역시_교차로 정보.csv | 2149 | 2149 | 0 |
 | 9 | 부산광역시_15분 도시공원_20251119.csv | 1137 | 1134 | 3 |
 | 10 | 스마트 버스쉘터 설치 현황.csv | 44 | 44 | 0 |
-| 11 | 어린이보호구역 내 불법주정차 CCTV설치현황_00.csv | 41 | 41 | 0 |
+| 11 | 전국어린이보호구역표준데이터.csv | 809 | 809 | 0 |
 | 12 | 부산광역시 교통정보서비스센터 보유 ITS CCTV 현황.zip | 212 | 212 | 0 |
 
-**합계: 209578 행**
+**합계: 210346 행**
 
 ## 제거된 행 샘플
 
@@ -68,45 +68,4 @@ line 1014: ['1014', '중구', '문화공원', '문화공원6', '중구 항만116
 
 ## 한계 / 미해결
 
-- 어린이보호구역 CCTV(code 11): 원본 미확보로 **구가공본 41행**만 적재 (전국어린이보호구역표준데이터로 대체 검토 — data/SOURCES.md D절)
-
----
-
-# 시뮬레이션/경계 테이블 가공 리포트 (Phase 1-R 2~4단계)
-
-원천: shapefile 3종. 스크립트: `data/process_sim.py`. 출력: 각 EWKT CSV.
-shapely 미설치 → pyshp `__geo_interface__`(링 외곽/홀·멀티 구조) + pyproj 좌표변환으로 EWKT 직접 생성.
-
-## 파일별 결과
-
-| 단계 | 테이블 | 원천 | 원본 | 적재 | 좌표변환 | 추출 기준 |
-|---|---|---|---|---|---|---|
-| 2 | building | AL_D162_26_20260115.shp | 234,446 | 234,446 | EPSG:5186→4326 | 전량(부산 코드26) |
-| 3 | road_node | MOCT_NODE.shp(전국 117.8만) | 1,177,983 | 61,121 | EPSG:5186→4326 | 부산 BBox 내 노드 |
-| 3 | road_link | MOCT_LINK.shp(전국 155.4만) | 1,554,487 | 86,896 | EPSG:5186→4326 | **양끝 노드 모두 부산** |
-| 4 | admin_emd | emd.shp(전국 5,065) | 5,065 | 192 | EPSG:5179→4326 | 법정동코드 앞2 = 26 |
-
-## 처리 상세
-
-- **building**: A0~A39 중 의미 확정분(A0 source_id, A3+A6 addr, A12 name, A24 연면적, A28 구조,
-  A30 용도, A32 지상층, A33 지하층, A37 높이)만 컬럼화, 나머지 A*는 props(원본 키 유지).
-  sigungu는 A3 주소에서 구/군 토큰 추출. height_est = (A37>0 ? A37 : 지상층×3.3) → 99.8% 채움.
-- **road**: 노드를 부산 BBox로 1차 추출 후, 양끝(F/T)이 모두 부산 노드인 링크만 유지(pgRouting
-  source/target 참조 무결성 보장). source/target은 적재 후 node_id→road_node.id 매핑(전건 부여).
-  cost·reverse_cost = 링크 길이(m), 일방통행 정보 없어 동일. nodes/links prj는 ITRF2000 중부원점이나
-  EPSG:5186과 cm급 차이라 5186으로 처리.
-- **admin_emd**: prj 누락 → 좌표 역산으로 EPSG:5179 확정(서울 종로 좌표 일치). sigungu는 코드 앞5자리
-  매핑. 시군구 경계는 `admin_sigungu` 뷰(dissolve)로 파생.
-- **무효 지오메트리 보정**: 원본 shapefile self-intersection을 적재 후 `ST_MakeValid`로 위상 교정
-  (building 68건, admin_emd 3건 → 모두 유효). 형상은 보존, 폴리곤만 추출해 MultiPolygon 유지.
-
-## 적재·검증 결과 (digital_twin)
-
-- 건수: building 234,446 / road_node 61,121 / road_link 86,896 / admin_emd 192
-- 전 테이블 SRID=4326 단일, ST_IsValid 전건 통과, 좌표 범위 부산 내(lon 128.7~129.37, lat 34.85~35.45)
-- road_link source/target NULL 0건(전건 매핑), admin_sigungu 뷰 16개 시군구 MultiPolygon 정상
-
-## 보류 (데이터 미확보)
-
-- DEM raster(5단계) → Phase 5에서 raster2pgsql 별도 작업
-- shelter / population_grid → 원천 파일 미확보, DDL 골격만 유지
+- 어린이보호구역(code 11): 구 단속CCTV 가공본(41행)을 **전국어린이보호구역표준데이터**(15012891)로 대체(2026-06-15). 전국본에서 도로명주소가 "부산"인 행만 추출, 좌표는 위도/경도 컬럼 명시, 시군구는 주소에서 추출. 보호구역 자체 위치 데이터라 facility_type도 child_protection_zone(어린이보호구역)으로 변경
