@@ -45,11 +45,12 @@
 
 ## 0-2. 백엔드 프로젝트 기반 정비
 - [x] `setting.gradle` → `settings.gradle` 파일명 교정 + `rootProject.name` 설정 (2026-06-15, 깨진 `-Encoding UTF8` 꼬리 제거)
-- [ ] `build.gradle` 의존성 정리
-  - [ ] lombok: `compileOnly` + `annotationProcessor`로 교정 (현재 implementation만 — Gradle 빌드 깨짐)
-  - [ ] MyBatis 제거 (JPA로 일원화 — 현재 둘 다 선언돼 있고 MyBatis는 미사용)
-  - [ ] hibernate-spatial 중복 선언 정리 (버전 명시 1개만)
-  - [ ] springdoc-openapi 추가 (API 문서 자동화)
+- [x] `build.gradle` 의존성 정리 (2026-06-20)
+  - [x] lombok: `compileOnly` + `annotationProcessor`로 교정 (버전은 Boot BOM 위임)
+  - [x] MyBatis 제거 (JPA로 일원화 — starter·core 2줄 삭제)
+  - [x] hibernate-spatial 중복 선언 정리 (`org.hibernate.orm:hibernate-spatial` 1줄, 버전 생략)
+  - [x] springdoc-openapi 추가 (`springdoc-openapi-starter-webmvc-ui:2.3.0`)
+  - [x] MyBatis 제거로 빌드 막던 옛 `safety_cctv` 의존 6개 파일 삭제 (FacilityPointDTO/BaseFacilityEntity/SafetyCctvEntity/SafetyCctvRepository/FacilityService/FacilityController) — 어차피 0-3 재작성 대상. 남은 코드: Application/CorsConfig/HealthController
 - [ ] 패키지 구조 재편: `com.Busan.CityView` → `com.busan.cityview` (Java 컨벤션) + 구조 확정
   ```
   com.busan.cityview
@@ -61,14 +62,14 @@
   - [ ] `application.yml` 공통 + `application-local.yml` 분리 (프로파일 기반)
   - [ ] `ddl-auto: update` → `validate` (스키마 변경은 migrations로만)
   - [ ] show-sql/trace 로깅 → local 프로파일 한정
-- [ ] Gradle 빌드 성공 확인 (`gradlew build`)
+- [x] Gradle 빌드 성공 확인 (`gradlew build`) — 2026-06-20 BUILD SUCCESSFUL (test 포함)
 
 ## 0-3. 백엔드 도메인 재작성 (신규 스키마 정합)
 - [ ] `FacilityTypeEntity` — `digital_twin.facility_type` 매핑 (code PK, name, nameKo, category, categoryKo)
 - [ ] `FacilityEntity` — `digital_twin.facility` 매핑
   - [ ] geom GENERATED 컬럼 → `@Column(insertable=false, updatable=false)` 읽기 전용 처리
   - [ ] props jsonb 매핑 방식 결정 (hypersistence-utils vs String 보관)
-  - [ ] 기존 `BaseFacilityEntity`/`SafetyCctvEntity`/`SafetyCctvRepository` 삭제
+  - [x] 기존 `BaseFacilityEntity`/`SafetyCctvEntity`/`SafetyCctvRepository` 삭제 (2026-06-20, 0-2 빌드 통과 과정에서 선행 제거)
 - [ ] `FacilityRepository` — `findByFacilityType`, 카테고리 조인 조회, BBox 네이티브 쿼리 골격
 - [ ] DTO 재설계: `FacilityPointResponse`(목록용 경량), `FacilityDetailResponse`(상세용), `FacilityTypeResponse`
 - [ ] 공통 응답/예외: `ErrorCode` enum + `GlobalExceptionHandler`(@RestControllerAdvice) + 404/400 표준 응답
