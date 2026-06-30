@@ -1,0 +1,16 @@
+# 운영 프로파일 — 보안 하드닝 (security.md [13] 3-2 / V2·V3)
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate    # 스키마 변경은 마이그레이션으로만, 앱이 운영 스키마를 바꾸지 못하게 (V2)
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+# 운영 로그: SQL/바인딩 미출력, root INFO 고정 (쿼리·파라미터 노출 방지 — V3)
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: warn
+    org.hibernate.type.descriptor.sql.BasicBinder: warn

@@ -58,10 +58,10 @@
   └─ domain/
      └─ facility/   # controller / service / repository / entity / dto
   ```
-- [ ] 설정 파일 재구성
-  - [ ] `application.yml` 공통 + `application-local.yml` 분리 (프로파일 기반)
-  - [ ] `ddl-auto: update` → `validate` (스키마 변경은 migrations로만)
-  - [ ] show-sql/trace 로깅 → local 프로파일 한정
+- [x] 설정 파일 재구성 (2026-06-30, security.md S1·3-2와 합류 실행)
+  - [x] `application.yml` 공통 + `application-local.yml` 분리 (프로파일 기반) — 운영용 `application-prod.yml`도 추가
+  - [x] `ddl-auto: update` → `validate` (운영 프로파일 한정, 스키마 변경은 migrations로만 / local은 update 유지)
+  - [x] show-sql/trace 로깅 → local 프로파일 한정 (운영은 미출력)
 - [x] Gradle 빌드 성공 확인 (`gradlew build`) — 2026-06-20 BUILD SUCCESSFUL (test 포함)
 
 ## 0-3. 백엔드 도메인 재작성 (신규 스키마 정합)

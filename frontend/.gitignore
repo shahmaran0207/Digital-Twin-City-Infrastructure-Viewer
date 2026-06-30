@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# 환경변수 (실제 값) — 템플릿(.env.example)만 추적, 토큰·비밀은 절대 커밋 금지
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

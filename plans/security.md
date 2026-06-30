@@ -50,15 +50,15 @@
 - [ ] **Cesium Ion 토큰 즉시 재발급** + 노출분 폐기 (PLAN 0-4와 동일 — 미완이면 최우선).
 - [ ] 깃 히스토리 스캔: `gitleaks` 또는 `trufflehog`로 과거 커밋 전수 점검.
   - 결정 필요 ▶ **히스토리에 비밀이 남아있을 경우**: (A) 토큰만 폐기·재발급하고 히스토리는 둔다(간단, 노출분 무효화로 충분) / (B) `git filter-repo`로 히스토리 재작성(깨끗하지만 협업 시 충돌·강제푸시 위험). **추천: A** (공개 토큰류는 폐기로 충분, 히스토리 재작성은 리스크 대비 실익 적음).
-- [ ] `.gitignore`에 `.env`·키파일 확정 (이미 일부 정비됨 — 재확인).
-- [ ] `.env.example` 제공(값 없이 키 목록만) — 신규 참여자 가이드.
-- [ ] 프론트 환경변수 원칙 문서화: `VITE_` 접두사는 **번들에 그대로 노출**됨 → Ion 토큰 같은 건 도메인 제한(Ion 측 allowed URLs)으로 보호, 진짜 비밀은 프론트에 두지 않는다.
+- [x] `.gitignore`에 `.env`·키파일 확정 (2026-06-30, 루트 `.env`/`.env.*` 확인 + `frontend/.gitignore`에도 명시 추가).
+- [x] `.env.example` 제공(값 없이 키 목록만) — 루트·`frontend/` 모두 존재 확인 (2026-06-30).
+- [x] 프론트 환경변수 원칙 문서화: `VITE_` 접두사는 **번들에 그대로 노출**됨 → Ion 토큰 같은 건 도메인 제한(Ion 측 allowed URLs)으로 보호, 진짜 비밀은 프론트에 두지 않는다.
 
 ### [13] 3-2. 백엔드 설정 하드닝 (P0~P1)
-- [ ] **프로파일 분리**: `application.yml`(공통) + `application-local.yml` / `application-prod.yml` (PLAN 0-2와 합류).
-- [ ] **`ddl-auto: validate`** (운영) — 스키마 변경은 마이그레이션으로만 (V2).
-- [ ] **`show-sql`/SQL trace 로깅은 local 프로파일 한정** (V3).
-- [ ] 운영 로그 레벨 `INFO` 고정, 민감 파라미터 마스킹 정책.
+- [x] **프로파일 분리**: `application.yml`(공통) + `application-local.yml` / `application-prod.yml` (2026-06-30, PLAN 0-2와 합류, `gradlew build` 통과).
+- [x] **`ddl-auto: validate`** (운영) — 운영 프로파일 한정 적용, local은 update 유지 (V2).
+- [x] **`show-sql`/SQL trace 로깅은 local 프로파일 한정** (2026-06-30, 운영은 미출력) (V3).
+- [x] 운영 로그 레벨 `INFO` 고정 (2026-06-30, prod root INFO). 민감 파라미터 마스킹 정책은 추후.
 - [ ] 액추에이터 도입 시 `/actuator/**` 노출 최소화(health/info만) + 인증.
 
 ### [14] 3-3. 인증·인가 (P1 — ✅ B 채택, 2026-06-27)
