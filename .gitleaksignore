@@ -1,0 +1,7 @@
+# gitleaks 무시 목록 (fingerprint 단위)
+# 여기 등록된 건은 "이미 무효화되어 위험이 없는 히스토리 잔재"만 넣는다.
+# 신규/유효한 비밀은 절대 등록 금지 — 반드시 재발급·폐기 후에만 추가한다.
+
+# 결정 A(2026-06-27): Cesium Ion 토큰은 재발급·폐기로 무효화하고 깃 히스토리는 재작성하지 않음.
+# 아래는 커밋 efa33209("프로젝트 기본 세팅")의 frontend/.env.development에 남은 옛 토큰(이미 폐기됨).
+efa33209846cb1c7d5d3f3605ef3bb6051d1b564:frontend/.env.development:jwt:11
