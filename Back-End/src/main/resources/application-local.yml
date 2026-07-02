@@ -14,3 +14,8 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.type.descriptor.sql.BasicBinder: trace
+
+# CORS 허용 오리진 — 개발 서버(vite dev, 포트 5000) (V4)
+app:
+  cors:
+    allowed-origins: http://localhost:5000

@@ -70,19 +70,20 @@
 - [ ] 관리 자격증명도 `.env`/시크릿으로 외부화, 평문 금지(BCrypt).
 
 ### [15] 3-4. 입력 검증·인젝션 방어 (P1)
+> ⏭️ **S2에서 이연 (2026-07-02)**: 검증 대상인 facility 컨트롤러·리포지토리가 아직 없음(Phase 0-3/Phase 2 미완). 방어할 API(BBox·type·limit 파라미터)가 생기는 **Phase 0-3/2 착수 시 함께** 구현한다.
 - [ ] 컨트롤러 파라미터 **Bean Validation**(`@Min/@Max/@Pattern`): `type`, `category`, `limit`, BBox 좌표 범위.
 - [ ] **네이티브 쿼리(BBox 등)는 반드시 바인딩 파라미터** — 문자열 결합 금지(SQLi).
 - [ ] `limit` 기본·상한 강제(예: 기본 1k, 최대 N) → 대용량 유형 DoS·메모리 폭발 방지.
 - [ ] JSON 요청 크기 제한(`server.tomcat.max-swallow-size` 등) — 쓰기 API 도입 시.
 
 ### [16] 3-5. CORS·보안 헤더·전송 (P2, 배포 시 P0)
-- [ ] CORS origin **프로파일별 환경변수화**(V4): local=5000, prod=실제 도메인.
+- [x] CORS origin **프로파일별 환경변수화**(V4): local=5000(vite dev 실포트), prod=`${CORS_ALLOWED_ORIGINS}` 환경변수(미설정 시 기동 실패=fail-closed) (2026-07-02, S2). `CorsConfig`가 `@Value("${app.cors.allowed-origins}")`로 주입, 하드코딩 제거. `gradlew build` 통과.
 - [ ] 보안 헤더(V6): CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options`/`frame-ancestors`, `Referrer-Policy`.
   - ⚠️ Cesium은 WebGL·웹워커·blob URL 사용 → CSP 작성 시 `worker-src blob:` 등 예외 필요. 깨지기 쉬우므로 점진 적용.
 - [ ] **HTTPS/TLS**(V8): 배포 시 리버스 프록시(Nginx/Caddy)에서 종단, HTTP→HTTPS 리다이렉트.
 
 ### [17] 3-6. DB 보안 (P1)
-- [ ] **앱 전용 DB 계정** 분리(현재 `postgres` 슈퍼유저 추정) → 필요 스키마에 `SELECT`(+ 앵커/쓰기 한정 권한)만 부여 (V2·권한상승 방어).
+- [x] **앱 전용 DB 계정** 분리 (2026-07-02, S2): `busan_app` 롤 신설(LOGIN), `digital_twin` 스키마 10객체(테이블 9+뷰 1)에 **SELECT만** 부여 + `public` USAGE(PostGIS 함수)·`ALTER DEFAULT PRIVILEGES`로 향후 테이블 자동 SELECT·`public` CREATE 회수. `.env`를 `busan_app`으로 교체. 검증: SELECT 210,346건·PostGIS 함수 성공 / INSERT·CREATE는 "접근 권한 없음" 거부 / `gradlew build` 통과(앱이 최소권한 계정으로 기동 성공). 쓰기/앵커 권한은 S3·Phase 4.5에서 한정 추가.
 - [ ] 운영 DB는 외부 접속 차단(로컬 소켓/사설망), `pg_hba.conf` 점검.
 - [ ] 정기 백업 + 복구 테스트(가용성).
 
@@ -111,7 +112,7 @@
 | 단계 | 묶음 | 항목 | 게이트 |
 |---|---|---|---|
 | **S1 (P0, 즉시)** ✅ 완료(2026-07-01) | 비밀·치명적 설정 | 3-1(토큰 재발급·시크릿 스캔), 3-2(ddl-auto·로깅) | 빌드 성공 + 비밀 스캔 클린 → **게이트 통과**(`gradlew build` BUILD SUCCESSFUL, `gitleaks` no leaks found). 액추에이터 항목은 미도입이라 도입 시 처리. |
-| **S2 (P1)** | 입력·DB·전송 | 3-4(검증·limit), 3-6(DB 계정 분리), 3-5 일부(CORS 환경변수) | 통합테스트 통과 |
+| **S2 (P1)** 🔶 부분완료(2026-07-02) | 입력·DB·전송 | 3-6(DB 계정 분리) ✅, 3-5 일부(CORS 환경변수) ✅ / 3-4(검증·limit) ⏭️ Phase 0-3·2로 이연(대상 컨트롤러 미존재) | 게이트: 통합테스트는 대상 API 부재로 **빌드 성공+DB 권한 동작 확인**으로 대체 → `gradlew build` SUCCESSFUL + 읽기전용 계정 SELECT 성공/쓰기 거부 확인 |
 | **S3 (P1)** | 인증 골격·블록체인 | 3-3(B안 채택 시), 3-7(앵커 보안) | 인증/검증 테스트 |
 | **S4 (P2)** | 헤더·CI·의존성 | 3-5(헤더·HTTPS), 3-8, 3-9 | CI 보안 게이트 통과 |
 | **S5 (P3)** | 마무리 | 공급망 핀, 침투 점검, 최종 리뷰 | PLAN Phase 7 보안 점검과 합류 |

@@ -14,3 +14,10 @@ logging:
     root: INFO
     org.hibernate.SQL: warn
     org.hibernate.type.descriptor.sql.BasicBinder: warn
+
+# CORS 허용 오리진 — 운영 도메인은 환경변수로만 주입 (하드코딩 금지, V4)
+# 미설정 시 기동 실패(fail-closed): 운영 도메인을 반드시 명시하게 강제
+# 여러 개는 콤마로 구분 (예: https://a.com,https://b.com)
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
