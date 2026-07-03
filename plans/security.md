@@ -62,12 +62,14 @@
 - [x] 운영 로그 레벨 `INFO` 고정 (2026-06-30, prod root INFO). 민감 파라미터 마스킹 정책은 추후.
 - [ ] 액추에이터 도입 시 `/actuator/**` 노출 최소화(health/info만) + 인증. — ⏭️ **현재 액추에이터 미도입** → S1 범위 외(도입 시점에 처리). 2026-07-01 확인.
 
-### [14] 3-3. 인증·인가 (P1 — ✅ B 채택, 2026-06-27)
+### [14] 3-3. 인증·인가 (P1 — ✅ B 채택, 2026-06-27 / ✅ 골격 완료 2026-07-03, S3)
 > 지금은 공개 조회뿐이라 당장 불필요할 수 있으나, "극강 보안" 목표상 **쓰기/관리 API가 생기는 순간**을 대비해 골격을 잡아둔다.
-> **채택: B** — Spring Security 골격만 미리 넣는다(비용 적고 이후 확장 안전). 학습 진행 규칙상 코드는 제시→입력 방식. 착수는 S3.
+> **채택: B** — Spring Security 골격만 미리 넣는다(비용 적고 이후 확장 안전). 착수는 S3.
 > (반려: A=보류는 쓰기 API 추가 시 무방비 / C=풀 인증(JWT·OAuth2)은 사용자 개념 없는 현 단계엔 과함)
-- [ ] `SecurityFilterChain`: `permitAll`(조회·swagger) + `authenticated`(관리/앵커 트리거) 분리.
-- [ ] 관리 자격증명도 `.env`/시크릿으로 외부화, 평문 금지(BCrypt).
+> 인증 방식: **HTTP Basic + InMemory(.env 주입) + BCrypt** 채택(2026-07-03). 세션/CSRF 부담 없는 무상태 API 골격에 적합.
+- [x] `SecurityFilterChain`: `permitAll`(조회 GET·swagger·health) + `authenticated`(그 외 POST/PUT/DELETE=관리·쓰기·앵커 트리거) 분리 (2026-07-03, `Config/SecurityConfig`). CSRF off·`SessionCreationPolicy.STATELESS`·HTTP Basic. `spring-boot-starter-security` 추가.
+- [x] 관리 자격증명 `.env`로 외부화, 평문 금지(BCrypt) (2026-07-03). `app.admin.username`/`app.admin.password-hash`를 `application.yml`에서 주입, `InMemoryUserDetailsManager`로 관리 계정 1개. 해시 미설정 시 로그인만 불가·기동 정상(보호 API 없는 현 단계 개발 무지장). `.env.example`에 키·해시 생성법 명시.
+> 검증(2026-07-03): `gradlew build` SUCCESSFUL + 기동 후 curl — 공개 GET `/api/health` **200**, swagger·api-docs **200**, 미인증 POST **401**(쓰기 차단 확인). 관리 계정 실제 로그인 검증은 보호 API가 생겨 `.env`에 해시를 넣는 시점에 함께 수행.
 
 ### [15] 3-4. 입력 검증·인젝션 방어 (P1)
 > ⏭️ **S2에서 이연 (2026-07-02)**: 검증 대상인 facility 컨트롤러·리포지토리가 아직 없음(Phase 0-3/Phase 2 미완). 방어할 API(BBox·type·limit 파라미터)가 생기는 **Phase 0-3/2 착수 시 함께** 구현한다.
@@ -88,6 +90,7 @@
 - [ ] 정기 백업 + 복구 테스트(가용성).
 
 ### [18] 3-7. 블록체인 무결성 (P1 — 프로젝트 핵심)
+> ⏭️ **S3에서 이연 (2026-07-03)**: 앵커링 코드·컨트랙트가 전무(`.sol` 0개, anchor/merkle 코드 0개). 지금 조치는 실효가 없으므로 아래 체크리스트는 **설계 원칙**으로 유지하고, 실제 보안 구현은 앵커 코드가 생기는 **Phase 4.5 착수 시 함께** 수행한다. (S2의 3-4 이연과 동일 논리)
 > Phase 4.5 설계와 합류. 보안 관점 체크리스트.
 - [ ] **머클 정규화 규칙의 결정성**: 같은 데이터 → 항상 같은 루트(직렬화·정렬·인코딩 고정). 비결정성은 무결성 자체를 무너뜨림.
 - [ ] **재진입/접근제어**: `anchor()` 호출 권한 제한(onlyOwner류), 컨트랙트 표준 보안 점검.
@@ -113,7 +116,7 @@
 |---|---|---|---|
 | **S1 (P0, 즉시)** ✅ 완료(2026-07-01) | 비밀·치명적 설정 | 3-1(토큰 재발급·시크릿 스캔), 3-2(ddl-auto·로깅) | 빌드 성공 + 비밀 스캔 클린 → **게이트 통과**(`gradlew build` BUILD SUCCESSFUL, `gitleaks` no leaks found). 액추에이터 항목은 미도입이라 도입 시 처리. |
 | **S2 (P1)** 🔶 부분완료(2026-07-02) | 입력·DB·전송 | 3-6(DB 계정 분리) ✅, 3-5 일부(CORS 환경변수) ✅ / 3-4(검증·limit) ⏭️ Phase 0-3·2로 이연(대상 컨트롤러 미존재) | 게이트: 통합테스트는 대상 API 부재로 **빌드 성공+DB 권한 동작 확인**으로 대체 → `gradlew build` SUCCESSFUL + 읽기전용 계정 SELECT 성공/쓰기 거부 확인 |
-| **S3 (P1)** | 인증 골격·블록체인 | 3-3(B안 채택 시), 3-7(앵커 보안) | 인증/검증 테스트 |
+| **S3 (P1)** 🔶 부분완료(2026-07-03) | 인증 골격·블록체인 | 3-3(인증 골격) ✅ / 3-7(앵커 보안) ⏭️ Phase 4.5로 이연(앵커 코드 미존재) | 게이트: `gradlew build` SUCCESSFUL + 기동 curl — 공개 GET 200·swagger 200·미인증 POST 401 확인 → **통과** |
 | **S4 (P2)** | 헤더·CI·의존성 | 3-5(헤더·HTTPS), 3-8, 3-9 | CI 보안 게이트 통과 |
 | **S5 (P3)** | 마무리 | 공급망 핀, 침투 점검, 최종 리뷰 | PLAN Phase 7 보안 점검과 합류 |
 

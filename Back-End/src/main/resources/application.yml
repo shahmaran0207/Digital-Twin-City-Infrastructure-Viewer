@@ -29,6 +29,13 @@ spring:
 server:
   port: 8030
 
+# 관리 계정 — 인증 골격(security.md 3-3, B안)용. 평문 금지, BCrypt 해시만 주입 (.env)
+# 미설정 시 로그인 불가(관리 계정 없음)일 뿐 기동은 정상 — 보호 API가 생기면 .env에 해시 필수
+app:
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    password-hash: ${ADMIN_PASSWORD_HASH:}
+
 # 공통 로그 레벨 — SQL/바인딩 상세 로그는 프로파일별로 분리 (운영 노출 방지, V3)
 logging:
   level:
