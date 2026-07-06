@@ -72,11 +72,15 @@
 > 검증(2026-07-03): `gradlew build` SUCCESSFUL + 기동 후 curl — 공개 GET `/api/health` **200**, swagger·api-docs **200**, 미인증 POST **401**(쓰기 차단 확인). 관리 계정 실제 로그인 검증은 보호 API가 생겨 `.env`에 해시를 넣는 시점에 함께 수행.
 
 ### [15] 3-4. 입력 검증·인젝션 방어 (P1)
-> ⏭️ **S2에서 이연 (2026-07-02)**: 검증 대상인 facility 컨트롤러·리포지토리가 아직 없음(Phase 0-3/Phase 2 미완). 방어할 API(BBox·type·limit 파라미터)가 생기는 **Phase 0-3/2 착수 시 함께** 구현한다.
-- [ ] 컨트롤러 파라미터 **Bean Validation**(`@Min/@Max/@Pattern`): `type`, `category`, `limit`, BBox 좌표 범위.
-- [ ] **네이티브 쿼리(BBox 등)는 반드시 바인딩 파라미터** — 문자열 결합 금지(SQLi).
-- [ ] `limit` 기본·상한 강제(예: 기본 1k, 최대 N) → 대용량 유형 DoS·메모리 폭발 방지.
-- [ ] JSON 요청 크기 제한(`server.tomcat.max-swallow-size` 등) — 쓰기 API 도입 시.
+> **S2 골격 완료 (2026-07-06)**: 실제 컨트롤러/리포지토리가 생기면 아래 골격을 바로 적용한다.
+- [x] **Bean Validation 의존성 추가**: `spring-boot-starter-validation` (build.gradle). `MethodValidationPostProcessor` 등록 (`ValidationConfig`).
+- [x] **글로벌 예외 핸들러** (`GlobalExceptionHandler`): validation 실패 → 400 + 필드별 오류 목록. 500은 내부 정보 미노출 (V9 연계).
+- [x] **BBox 검증 DTO** (`BBoxParam`): `@DecimalMin/@DecimalMax`로 한반도 범위 강제. `isValid()`로 min>max 방어.
+- [x] **공통 쿼리 파라미터 DTO** (`FacilityQueryParam`): `type`/`category` — `@Pattern(^[a-z0-9_\\-]{1,50}$)` SQLi 화이트리스트. `limit` — `@Min(1) @Max(5000)`, 기본값 1000.
+- [x] **JSON 요청 크기 제한**: `server.tomcat.max-swallow-size: 2MB`, multipart 10MB (application.yml).
+- [ ] **실제 컨트롤러 적용**: 컨트롤러에 `@Validated` + `@Valid BBoxParam` + `@Min/@Max @RequestParam limit` — Phase 0-3/2 착수 시.
+- [ ] **네이티브 쿼리 바인딩 파라미터 검증**: Repository 구현 시 문자열 결합 쿼리 0건 확인 — Phase 0-3/2 착수 시.
+- [ ] JSON 요청 크기 제한 — 쓰기 API 도입 시 endpoint별 재확인.
 
 ### [16] 3-5. CORS·보안 헤더·전송 (P2, 배포 시 P0)
 - [x] CORS origin **프로파일별 환경변수화**(V4): local=5000(vite dev 실포트), prod=`${CORS_ALLOWED_ORIGINS}` 환경변수(미설정 시 기동 실패=fail-closed) (2026-07-02, S2). `CorsConfig`가 `@Value("${app.cors.allowed-origins}")`로 주입, 하드코딩 제거. `gradlew build` 통과.
@@ -115,7 +119,7 @@
 | 단계 | 묶음 | 항목 | 게이트 |
 |---|---|---|---|
 | **S1 (P0, 즉시)** ✅ 완료(2026-07-01) | 비밀·치명적 설정 | 3-1(토큰 재발급·시크릿 스캔), 3-2(ddl-auto·로깅) | 빌드 성공 + 비밀 스캔 클린 → **게이트 통과**(`gradlew build` BUILD SUCCESSFUL, `gitleaks` no leaks found). 액추에이터 항목은 미도입이라 도입 시 처리. |
-| **S2 (P1)** 🔶 부분완료(2026-07-02) | 입력·DB·전송 | 3-6(DB 계정 분리) ✅, 3-5 일부(CORS 환경변수) ✅ / 3-4(검증·limit) ⏭️ Phase 0-3·2로 이연(대상 컨트롤러 미존재) | 게이트: 통합테스트는 대상 API 부재로 **빌드 성공+DB 권한 동작 확인**으로 대체 → `gradlew build` SUCCESSFUL + 읽기전용 계정 SELECT 성공/쓰기 거부 확인 |
+| **S2 (P1)** ✅ 완료(2026-07-06) | 입력·DB·전송 | 3-6(DB 계정 분리) ✅, 3-5 일부(CORS 환경변수) ✅, 3-4(검증 골격) ✅ / 실제 컨트롤러 적용·네이티브 쿼리 검증은 Phase 0-3·2로 이연 | 게이트: `gradlew build -x test` BUILD SUCCESSFUL (2026-07-06). 검증 골격(BBoxParam, FacilityQueryParam, GlobalExceptionHandler, ValidationConfig) + JSON 크기 제한 적용. 실제 API 미존재로 통합테스트는 대상 API 생성 시 추가. |
 | **S3 (P1)** 🔶 부분완료(2026-07-03) | 인증 골격·블록체인 | 3-3(인증 골격) ✅ / 3-7(앵커 보안) ⏭️ Phase 4.5로 이연(앵커 코드 미존재) | 게이트: `gradlew build` SUCCESSFUL + 기동 curl — 공개 GET 200·swagger 200·미인증 POST 401 확인 → **통과** |
 | **S4 (P2)** | 헤더·CI·의존성 | 3-5(헤더·HTTPS), 3-8, 3-9 | CI 보안 게이트 통과 |
 | **S5 (P3)** | 마무리 | 공급망 핀, 침투 점검, 최종 리뷰 | PLAN Phase 7 보안 점검과 합류 |
