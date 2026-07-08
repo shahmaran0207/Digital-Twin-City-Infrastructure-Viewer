@@ -13,6 +13,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 /**
  * 인증·인가 골격 (security.md 3-3, B안).
@@ -71,6 +74,21 @@ public class SecurityConfig {
                         // 그 외(쓰기·관리·앵커 트리거 등)는 인증 필요
                         .anyRequest().authenticated()
                 )
+                // 보안 헤더 (security.md 3-5, V6). JSON API에 유효한 4종만 명시.
+                // CSP는 문서(HTML) 응답에만 실효 → Cesium이 도는 프론트 index.html 영역이라 여기서 다루지 않음.
+                .headers(headers -> headers
+                        // HSTS: 브라우저가 이후 요청을 HTTPS로 강제(1년, 서브도메인 포함).
+                        //   TLS 종단(배포) 시 실효, 평문 HTTP 요청에선 브라우저가 무시하므로 로컬에 무해.
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31536000))
+                        // MIME 스니핑 차단(nosniff) — 응답을 선언된 타입으로만 해석. 기본값이나 의도 명시.
+                        .contentTypeOptions(withDefaults())
+                        // 클릭재킹 차단: API는 프레임에 넣을 일이 없으므로 DENY.
+                        .frameOptions(frame -> frame.deny())
+                        // Referer 최소 전송: 교차 출처엔 origin만, 강등(HTTPS→HTTP) 시 미전송.
+                        .referrerPolicy(referrer -> referrer
+                                .policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
                 // HTTP Basic 인증
                 .httpBasic(basic -> {});
 

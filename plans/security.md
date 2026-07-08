@@ -84,8 +84,9 @@
 
 ### [16] 3-5. CORS·보안 헤더·전송 (P2, 배포 시 P0)
 - [x] CORS origin **프로파일별 환경변수화**(V4): local=5000(vite dev 실포트), prod=`${CORS_ALLOWED_ORIGINS}` 환경변수(미설정 시 기동 실패=fail-closed) (2026-07-02, S2). `CorsConfig`가 `@Value("${app.cors.allowed-origins}")`로 주입, 하드코딩 제거. `gradlew build` 통과.
-- [ ] 보안 헤더(V6): CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options`/`frame-ancestors`, `Referrer-Policy`.
-  - ⚠️ Cesium은 WebGL·웹워커·blob URL 사용 → CSP 작성 시 `worker-src blob:` 등 예외 필요. 깨지기 쉬우므로 점진 적용.
+- [x] 보안 헤더(V6) — **백엔드 JSON API 4종** (2026-07-08, S4): `SecurityConfig.headers()` DSL로 HSTS(1년·includeSubDomains)·`X-Content-Type-Options: nosniff`·`X-Frame-Options: DENY`·`Referrer-Policy: strict-origin-when-cross-origin` 명시. `gradlew build -x test` 통과. 기동 후 `curl -I /api/health`로 nosniff·DENY·Referrer-Policy **3종 출력 확인**. HSTS는 Spring이 HTTPS 요청에만 전송 → 평문 HTTP에선 미출력(정상), TLS 종단(아래 HTTPS 항목) 후 자동 출력.
+- [ ] **CSP는 프론트엔드 영역**으로 분리 — CSP는 문서(HTML) 응답에만 실효가 있는데 Cesium이 도는 건 프론트 `index.html`(Vite/정적 호스트 서빙)이고 백엔드는 JSON만 반환. 프론트 index.html/정적 호스트에 CSP 적용.
+  - ⚠️ Cesium은 WebGL·웹워커·blob URL 사용 → CSP 작성 시 `worker-src blob:` 등 예외 필요. 깨지기 쉬우므로 프론트 실행 화면 확인하며 점진 적용.
 - [ ] **HTTPS/TLS**(V8): 배포 시 리버스 프록시(Nginx/Caddy)에서 종단, HTTP→HTTPS 리다이렉트.
 
 ### [17] 3-6. DB 보안 (P1)
