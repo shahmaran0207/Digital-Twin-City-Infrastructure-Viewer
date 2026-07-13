@@ -25,7 +25,7 @@ jobs:
         with:
           fetch-depth: 0  # push 시 전체 커밋 스캔. .gitleaksignore로 알려진 무효 건 제외.
       - name: gitleaks 스캔
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
