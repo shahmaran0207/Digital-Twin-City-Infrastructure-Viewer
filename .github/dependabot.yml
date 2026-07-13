@@ -1,0 +1,32 @@
+# Dependabot 의존성 업데이트 (security.md 3-8)
+# 백엔드(gradle) + 프론트(npm) + GitHub Actions 자체 버전을 주기적으로 점검해
+# 알려진 CVE·구버전을 PR로 올린다. 백엔드 OWASP Dependency-Check는 NVD 키·CI 부하 부담이 커
+# 도입하지 않고, gradle 생태계 업데이트를 이 Dependabot으로 대체한다.
+version: 2
+updates:
+  # 백엔드 — Spring Boot 등 gradle 의존성
+  - package-ecosystem: gradle
+    directory: /Back-End
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(backend)"
+
+  # 프론트 — cesium/react 등 npm 의존성 (dev 포함)
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(frontend)"
+
+  # GitHub Actions 워크플로에서 쓰는 액션 버전 핀 업데이트
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(ci)"

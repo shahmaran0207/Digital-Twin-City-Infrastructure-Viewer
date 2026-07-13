@@ -1,0 +1,71 @@
+# 보안 CI 게이트 (security.md 3-9)
+# - 시크릿 스캔(gitleaks): 루트 .gitleaksignore 재사용 → 알려진 무효 건 제외, 신규 유출만 탐지
+# - 백엔드 컴파일 점검 + 프론트 의존성 스캔(npm audit)
+# 워크플로 권한은 최소(read)로 고정한다.
+name: security
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# 3-9: 워크플로 권한 최소화 (기본 read-only, 필요한 잡에서만 승격)
+permissions:
+  contents: read
+
+jobs:
+  # 시크릿 스캔 — 신규 비밀 유출을 머지 전에 차단
+  secret-scan:
+    name: 시크릿 스캔 (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: 체크아웃 (전체 히스토리)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # push 시 전체 커밋 스캔. .gitleaksignore로 알려진 무효 건 제외.
+      - name: gitleaks 스캔
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # 백엔드 컴파일 점검 — 테스트(contextLoads)는 DB(PostGIS) 필요라 CI에선 제외.
+  # 전체 테스트는 로컬 게이트(gradlew build)에서 수행. DB 서비스 컨테이너는 추후 도입.
+  backend-build:
+    name: 백엔드 빌드 점검
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Back-End
+    steps:
+      - uses: actions/checkout@v4
+      - name: JDK 17 설정
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: gradle 빌드 (DB 의존 테스트 제외)
+        run: ./gradlew build -x test --no-daemon
+
+  # 프론트 의존성 스캔 — high 이상 리포트.
+  # 현재는 report-only(continue-on-error): 취약점 해소는 Dependabot PR에 위임(security.md 3-8).
+  # 백로그 정리 후 continue-on-error 제거 → 하드 게이트로 승격 예정.
+  frontend-audit:
+    name: 프론트 의존성 스캔 (npm audit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Node 20 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: 의존성 설치
+        run: npm ci
+      - name: npm audit (high 이상)
+        continue-on-error: true  # Dependabot이 정리할 때까지 report-only. 이후 하드 게이트로 전환.
+        run: npm audit --audit-level=high
