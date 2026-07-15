@@ -106,7 +106,8 @@
 ### [19] 3-8. 의존성·공급망 (P2~P3)
 - [x] **백엔드**: Dependabot(gradle, `/Back-End`) 주간 점검으로 gradle 의존성 CVE·구버전 PR화 (2026-07-13, S4, `.github/dependabot.yml`). **OWASP Dependency-Check는 미도입** — 최신판은 NVD API 키 필요 + CI 부하 큼. 문서 원칙("OWASP **또는** Gradle 점검 + Dependabot") 상 Dependabot(gradle)로 대체 충족. 실 CVE 정밀검사가 필요해지면 그때 도입.
 - [x] **프론트**: Dependabot(npm, `/frontend`) 주간 점검 + CI `npm audit --audit-level=high`(현재 report-only) (2026-07-13, S4). 현황: audit 13건(critical 1·high 5)이나 대부분 **devDependencies**(vite/rollup/vite-plugin-cesium, 번들 미포함) → 즉시 `audit fix` 대신 **Dependabot PR 검토·머지에 위임**(빌드 안정성 유지). Dependabot이 백로그 정리 후 CI audit을 하드 게이트로 승격 예정.
-- [x] lockfile 커밋 확인: `frontend/package-lock.json` 추적 중 ✅. gradle은 Boot BOM 위임(V11, 별도 lockfile 없음). 플러그인/스냅샷 버전 핀 정밀 점검은 S5로 이연.
+- [x] lockfile 커밋 확인: `frontend/package-lock.json` 추적 중 ✅. gradle은 Boot BOM 위임(V11, 별도 lockfile 없음).
+- [x] **플러그인/스냅샷 버전 핀 정밀 점검** (2026-07-15, V11 종결): `build.gradle`/`settings.gradle` 전수 확인 — 플러그인 명시 핀(Spring Boot `3.2.1`, dependency-management `1.1.4`), 부동 버전(`+`·`latest.release`) 0건, 스냅샷 **의존성** 0건(`0.0.1-SNAPSHOT`은 앱 자체 버전이라 공급망 위험 아님), 나머지 의존성은 Boot BOM 위임으로 재현가능. → 조치 불필요, 위험 없음 확인.
 
 ### [20] 3-9. CI/CD 보안 게이트 (P2)
 - [x] GitHub Actions에 **시크릿 스캔(gitleaks)** + **의존성 스캔** 워크플로 (2026-07-13, S4, `.github/workflows/security.yml`). 3개 잡: ① gitleaks(전체 히스토리, 루트 `.gitleaksignore` 재사용 → 알려진 무효 건 제외·신규만 탐지) ② 백엔드 `gradlew build -x test`(DB 의존 `contextLoads` 테스트는 CI DB 부재로 제외, 로컬 전체 게이트 유지) ③ 프론트 `npm audit`. 검증: 로컬 `gradlew build -x test` **BUILD SUCCESSFUL**. (선택 CodeQL/SAST는 S5로 이연.)
@@ -123,7 +124,7 @@
 | **S2 (P1)** ✅ 완료(2026-07-06) | 입력·DB·전송 | 3-6(DB 계정 분리) ✅, 3-5 일부(CORS 환경변수) ✅, 3-4(검증 골격) ✅ / 실제 컨트롤러 적용·네이티브 쿼리 검증은 Phase 0-3·2로 이연 | 게이트: `gradlew build -x test` BUILD SUCCESSFUL (2026-07-06). 검증 골격(BBoxParam, FacilityQueryParam, GlobalExceptionHandler, ValidationConfig) + JSON 크기 제한 적용. 실제 API 미존재로 통합테스트는 대상 API 생성 시 추가. |
 | **S3 (P1)** 🔶 부분완료(2026-07-03) | 인증 골격·블록체인 | 3-3(인증 골격) ✅ / 3-7(앵커 보안) ⏭️ Phase 4.5로 이연(앵커 코드 미존재) | 게이트: `gradlew build` SUCCESSFUL + 기동 curl — 공개 GET 200·swagger 200·미인증 POST 401 확인 → **통과** |
 | **S4 (P2)** 🔶 부분완료(2026-07-13) | 헤더·CI·의존성 | 3-5 헤더(백엔드 4종) ✅ / 3-8(Dependabot) ✅ / 3-9(gitleaks+의존성 CI, `permissions:read`) ✅ / 3-5 CSP·HTTPS ⏭️ 이연 | 게이트: 로컬 `gradlew build -x test` SUCCESSFUL + `.github/` 워크플로·Dependabot 추가. CSP=프론트 Cesium 미연동으로 검증화면 부재→프론트 지도 착수 시, HTTPS=배포(리버스 프록시) 시점, CodeQL·머지 게이트=S5. |
-| **S5 (P3)** | 마무리 | 공급망 핀, 침투 점검, 최종 리뷰 | PLAN Phase 7 보안 점검과 합류 |
+| **S5 (P3)** | 마무리 | 공급망 핀 ✅(2026-07-15, 3-8 완료) / 침투 점검·최종 리뷰·머지 게이트(원격)·CSP·HTTPS는 착수조건 도달 시 | PLAN Phase 7 보안 점검과 합류 |
 
 > S1·S2는 Phase 0(재설계) 작업과 자연스럽게 합류 — 프로파일 분리·ddl-auto·CORS는 이미 PLAN 0-2에 있음.
 
