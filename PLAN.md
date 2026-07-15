@@ -308,7 +308,7 @@
   - [ ] 3-5 **HTTPS/TLS** — 배포(리버스 프록시 종단·HTTP→HTTPS 리다이렉트) 시점
   - [ ] 3-6 운영 DB 외부접속 차단(`pg_hba.conf`)·정기 백업/복구 테스트 — 배포/운영 시점(현재 로컬 dev DB만)
   - [ ] 3-7 블록체인 앵커 보안 5종(머클 결정성·접근제어·키관리·온체인 대조·정적분석) — 앵커 코드 착수 시(**Phase 4.5**, [plans/blockchain.md](plans/blockchain.md)). 현재 `.sol`·앵커 코드 0개
-  - [ ] 3-9 PR 머지 게이트(브랜치 보호 규칙) — **GitHub 원격 설정 필요, 사용자 조치**. `gh` CLI 미설치 → 아래 둘 중 하나: (a) GitHub 웹 Settings→Branches에서 `main` 보호 + security.yml 통과 필수화, (b) `! winget install GitHub.cli` 후 `gh` 로그인해 AI가 대행
+  - [x] 3-9 PR 머지 게이트 — 2026-07-15 완료. `main` 브랜치 보호 적용(`gh api`): required checks=`시크릿 스캔 (gitleaks)`+`백엔드 빌드 점검`, force-push·삭제 차단, enforce_admins=false(소유자 escape hatch)
   - [ ] (참고) 3-2 액추에이터 노출 최소화 — 액추에이터 미도입이라 범위 외(도입 시 처리)
   - [ ] 비밀정보 히스토리 확인·Ion 토큰 교체 완료 재확인(S1에서 완료, 최종 리뷰 때 재점검)
 - [ ] (선택) 배포: 프론트 정적 호스팅 + 백엔드/DB 호스팅 여부 결정

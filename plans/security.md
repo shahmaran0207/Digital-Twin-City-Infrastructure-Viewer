@@ -112,7 +112,7 @@
 ### [20] 3-9. CI/CD 보안 게이트 (P2)
 - [x] GitHub Actions에 **시크릿 스캔(gitleaks)** + **의존성 스캔** 워크플로 (2026-07-13, S4, `.github/workflows/security.yml`). 3개 잡: ① gitleaks(전체 히스토리, 루트 `.gitleaksignore` 재사용 → 알려진 무효 건 제외·신규만 탐지) ② 백엔드 `gradlew build -x test`(DB 의존 `contextLoads` 테스트는 CI DB 부재로 제외, 로컬 전체 게이트 유지) ③ 프론트 `npm audit`. 검증: 로컬 `gradlew build -x test` **BUILD SUCCESSFUL**. (선택 CodeQL/SAST는 S5로 이연.)
 - [x] Actions 워크플로 권한 최소화: `permissions: contents: read` 고정 (2026-07-13). 토큰은 러너 기본 `secrets.GITHUB_TOKEN`만 사용, 외부 시크릿 미주입.
-- [ ] PR마다 `/security-review` 또는 SAST 통과를 머지 게이트로. — 브랜치 보호 규칙(원격) 설정 필요, S5에서 처리.
+- [x] PR 머지 게이트: `main` 브랜치 보호 규칙 적용 (2026-07-15, `gh api`로 설정). **required status checks = `시크릿 스캔 (gitleaks)` + `백엔드 빌드 점검`**(둘 다 green이어야 PR 머지 가능), `allow_force_pushes:false`·`allow_deletions:false`로 main 강제푸시·삭제 차단. `enforce_admins:false`(1인 개발 편의상 소유자 escape hatch 유지 — 필요 시 true로 승격). 프론트 audit은 report-only(continue-on-error)라 게이트에서 제외. (선택 `/security-review`·CodeQL/SAST를 게이트에 추가하는 건 S5로 이연.)
 
 ---
 
@@ -124,7 +124,7 @@
 | **S2 (P1)** ✅ 완료(2026-07-06) | 입력·DB·전송 | 3-6(DB 계정 분리) ✅, 3-5 일부(CORS 환경변수) ✅, 3-4(검증 골격) ✅ / 실제 컨트롤러 적용·네이티브 쿼리 검증은 Phase 0-3·2로 이연 | 게이트: `gradlew build -x test` BUILD SUCCESSFUL (2026-07-06). 검증 골격(BBoxParam, FacilityQueryParam, GlobalExceptionHandler, ValidationConfig) + JSON 크기 제한 적용. 실제 API 미존재로 통합테스트는 대상 API 생성 시 추가. |
 | **S3 (P1)** 🔶 부분완료(2026-07-03) | 인증 골격·블록체인 | 3-3(인증 골격) ✅ / 3-7(앵커 보안) ⏭️ Phase 4.5로 이연(앵커 코드 미존재) | 게이트: `gradlew build` SUCCESSFUL + 기동 curl — 공개 GET 200·swagger 200·미인증 POST 401 확인 → **통과** |
 | **S4 (P2)** 🔶 부분완료(2026-07-13) | 헤더·CI·의존성 | 3-5 헤더(백엔드 4종) ✅ / 3-8(Dependabot) ✅ / 3-9(gitleaks+의존성 CI, `permissions:read`) ✅ / 3-5 CSP·HTTPS ⏭️ 이연 | 게이트: 로컬 `gradlew build -x test` SUCCESSFUL + `.github/` 워크플로·Dependabot 추가. CSP=프론트 Cesium 미연동으로 검증화면 부재→프론트 지도 착수 시, HTTPS=배포(리버스 프록시) 시점, CodeQL·머지 게이트=S5. |
-| **S5 (P3)** | 마무리 | 공급망 핀 ✅(2026-07-15, 3-8 완료) / 침투 점검·최종 리뷰·머지 게이트(원격)·CSP·HTTPS는 착수조건 도달 시 | PLAN Phase 7 보안 점검과 합류 |
+| **S5 (P3)** | 마무리 | 공급망 핀 ✅·머지 게이트 ✅(2026-07-15, 3-8·3-9 완료) / 침투 점검·최종 리뷰·CodeQL/SAST·CSP·HTTPS는 착수조건 도달 시 | PLAN Phase 7 보안 점검과 합류 |
 
 > S1·S2는 Phase 0(재설계) 작업과 자연스럽게 합류 — 프로파일 분리·ddl-auto·CORS는 이미 PLAN 0-2에 있음.
 
