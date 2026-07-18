@@ -51,12 +51,12 @@
   - [x] hibernate-spatial 중복 선언 정리 (`org.hibernate.orm:hibernate-spatial` 1줄, 버전 생략)
   - [x] springdoc-openapi 추가 (`springdoc-openapi-starter-webmvc-ui:2.3.0`)
   - [x] MyBatis 제거로 빌드 막던 옛 `safety_cctv` 의존 6개 파일 삭제 (FacilityPointDTO/BaseFacilityEntity/SafetyCctvEntity/SafetyCctvRepository/FacilityService/FacilityController) — 어차피 0-3 재작성 대상. 남은 코드: Application/CorsConfig/HealthController
-- [ ] 패키지 구조 재편: `com.Busan.CityView` → `com.busan.cityview` (Java 컨벤션) + 구조 확정
+- [x] 패키지 구조 재편: `com.Busan.CityView` → `com.busan.cityview` (Java 컨벤션) + 구조 확정 (2026-07-18, 커밋 7316e67 — 대소문자 rename은 core.ignorecase 우회로 소문자 경로 강제)
   ```
   com.busan.cityview
-  ├─ global/        # config(Cors, OpenAPI), exception(ErrorCode, GlobalExceptionHandler), common(BaseResponse 등)
+  ├─ global/        # config(Cors, Security, Validation), exception(GlobalExceptionHandler), web(HealthController)
   └─ domain/
-     └─ facility/   # controller / service / repository / entity / dto
+     └─ facility/   # dto (entity/repository/service/controller는 0-3에서 추가)
   ```
 - [x] 설정 파일 재구성 (2026-06-30, security.md S1·3-2와 합류 실행)
   - [x] `application.yml` 공통 + `application-local.yml` 분리 (프로파일 기반) — 운영용 `application-prod.yml`도 추가
