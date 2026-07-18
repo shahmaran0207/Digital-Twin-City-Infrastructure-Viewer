@@ -1,8 +1,8 @@
-package com.Busan.CityView.Dto;
+package com.busan.cityview.domain.facility.dto;
 
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 

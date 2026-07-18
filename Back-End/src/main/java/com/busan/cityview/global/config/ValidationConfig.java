@@ -1,8 +1,8 @@
-package com.Busan.CityView.Config;
+package com.busan.cityview.global.config;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Bean;
 
 /**
  * 메서드 레벨 Bean Validation 활성화 (security.md S2 3-4).
@@ -12,7 +12,7 @@ import org.springframework.validation.beanvalidation.MethodValidationPostProcess
  * 제약 어노테이션이 실제로 검증된다.
  *
  * <p>검증 실패 시 {@link jakarta.validation.ConstraintViolationException}이 던져지고
- * {@link com.Busan.CityView.Exception.GlobalExceptionHandler}가 400으로 응답한다.
+ * {@link com.busan.cityview.global.exception.GlobalExceptionHandler}가 400으로 응답한다.
  *
  * <p>사용 예 — 컨트롤러:
  * <pre>
