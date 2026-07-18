@@ -51,12 +51,12 @@
   - [x] hibernate-spatial 중복 선언 정리 (`org.hibernate.orm:hibernate-spatial` 1줄, 버전 생략)
   - [x] springdoc-openapi 추가 (`springdoc-openapi-starter-webmvc-ui:2.3.0`)
   - [x] MyBatis 제거로 빌드 막던 옛 `safety_cctv` 의존 6개 파일 삭제 (FacilityPointDTO/BaseFacilityEntity/SafetyCctvEntity/SafetyCctvRepository/FacilityService/FacilityController) — 어차피 0-3 재작성 대상. 남은 코드: Application/CorsConfig/HealthController
-- [ ] 패키지 구조 재편: `com.Busan.CityView` → `com.busan.cityview` (Java 컨벤션) + 구조 확정
+- [x] 패키지 구조 재편: `com.Busan.CityView` → `com.busan.cityview` (Java 컨벤션) + 구조 확정 (2026-07-18, 커밋 7316e67 — 대소문자 rename은 core.ignorecase 우회로 소문자 경로 강제)
   ```
   com.busan.cityview
-  ├─ global/        # config(Cors, OpenAPI), exception(ErrorCode, GlobalExceptionHandler), common(BaseResponse 등)
+  ├─ global/        # config(Cors, Security, Validation), exception(GlobalExceptionHandler), web(HealthController)
   └─ domain/
-     └─ facility/   # controller / service / repository / entity / dto
+     └─ facility/   # dto (entity/repository/service/controller는 0-3에서 추가)
   ```
 - [x] 설정 파일 재구성 (2026-06-30, security.md S1·3-2와 합류 실행)
   - [x] `application.yml` 공통 + `application-local.yml` 분리 (프로파일 기반) — 운영용 `application-prod.yml`도 추가
@@ -301,6 +301,7 @@
 - [ ] 최종 성능 패스: 초기 로딩, 레이어 전환, 메모리 — 측정치 기록
 - [ ] 시연 시나리오 작성 (발표 동선: 전체 뷰 → 레이어 → 상세 → 위기레벨 → 대시보드)
 - [ ] README 완성: 아키텍처 다이어그램, 스크린샷/GIF, 실행 방법, 데이터 출처·가공 내역
+- [ ] Dependabot 의존성 업데이트 검토·적용 — 2026-07-18 열린 PR 13개(메이저 다수: Spring Boot 3.2→4.1·Vite 7→8·TypeScript 5→7·springdoc 2→3·gradle-wrapper 8→9·react 메이저) **전부 close + 원격 브랜치 삭제**(소스트리 그래프 정리 목적, 코드 무변경). Dependabot 설정은 유지 → 필요한 버전 업은 이 단계에서 **빌드 검증과 함께 개별 적용**(메이저는 호환성 확인 필수)
 - [ ] 보안 최종 점검(S5) → 세부 계획 [plans/security.md](plans/security.md). **2026-07-15 현황 정리** — S1~S4에서 지금 가능한 P0~P2는 전부 완료, 아래는 각 착수 조건이 갖춰지는 단계에서 처리(현시점 물리적으로 불가):
   - [x] 3-8 공급망 플러그인/스냅샷 버전 핀 점검 — 2026-07-15 완료(명시 핀·스냅샷 의존성 0건)
   - [ ] 3-4 입력검증 **실제 컨트롤러 적용**·네이티브 쿼리 바인딩 검증 — 조회 API 착수 시(**Phase 2**). 현재 `HealthController`(파라미터 0개)만 존재해 붙일 대상 없음. 검증 골격(BBoxParam/FacilityQueryParam/GlobalExceptionHandler)은 준비됨

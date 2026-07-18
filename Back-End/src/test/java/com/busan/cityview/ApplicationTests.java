@@ -1,7 +1,7 @@
-package com.Busan.CityView;
+package com.busan.cityview;
 
-import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.Test;
 
 @SpringBootTest
 class ApplicationTests {

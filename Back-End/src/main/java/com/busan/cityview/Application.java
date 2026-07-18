@@ -1,9 +1,9 @@
-package com.Busan.CityView;
+package com.busan.cityview;
 
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.SpringApplication;
 
-@SpringBootApplication(scanBasePackages = "com.Busan.CityView")
+@SpringBootApplication(scanBasePackages = "com.busan.cityview")
 public class Application {
 
 	public static void main(String[] args) {
