@@ -65,16 +65,18 @@
 - [x] Gradle 빌드 성공 확인 (`gradlew build`) — 2026-06-20 BUILD SUCCESSFUL (test 포함)
 
 ## 0-3. 백엔드 도메인 재작성 (신규 스키마 정합)
-- [ ] `FacilityTypeEntity` — `digital_twin.facility_type` 매핑 (code PK, name, nameKo, category, categoryKo)
-- [ ] `FacilityEntity` — `digital_twin.facility` 매핑
-  - [ ] geom GENERATED 컬럼 → `@Column(insertable=false, updatable=false)` 읽기 전용 처리
-  - [ ] props jsonb 매핑 방식 결정 (hypersistence-utils vs String 보관)
+> 진행 방식: 학습 대상 코드라 "코드 제시 → 사용자 입력 → AI 검사 → 다음"으로 한 덩어리씩.
+> **착수 결정(2026-07-22)**: ① props = hypersistence-utils `JsonType` + `Map` / ② 테스트 DB = 로컬 PG18 직결(`@DataJpaTest` `replace=NONE`) / ③ 예외 = RFC 7807 ProblemDetail + `ErrorCode` enum으로 재정비.
+- [x] `FacilityTypeEntity` — `digital_twin.facility_type` 매핑 (code PK, name, nameKo, category, categoryKo) (2026-07-22, 커밋 2879e07 — 조회 전용·setter 없음)
+- [x] `FacilityEntity` — `digital_twin.facility` 매핑 (2026-07-23, 오타 수정 후 컴파일 통과 — V1 DDL·FacilityTypeEntity와 컬럼/타입/제약 전수 대조)
+  - [x] geom GENERATED 컬럼 → **미매핑 결정** (앱은 lon/lat만 사용, Point 타입 의존 제거)
+  - [x] props jsonb 매핑 방식 결정 → **hypersistence-utils `JsonType` + `Map`** 채택, `build.gradle` 의존성 추가 (2026-07-22, 커밋 2879e07)
   - [x] 기존 `BaseFacilityEntity`/`SafetyCctvEntity`/`SafetyCctvRepository` 삭제 (2026-06-20, 0-2 빌드 통과 과정에서 선행 제거)
 - [ ] `FacilityRepository` — `findByFacilityType`, 카테고리 조인 조회, BBox 네이티브 쿼리 골격
 - [ ] DTO 재설계: `FacilityPointResponse`(목록용 경량), `FacilityDetailResponse`(상세용), `FacilityTypeResponse`
-- [ ] 공통 응답/예외: `ErrorCode` enum + `GlobalExceptionHandler`(@RestControllerAdvice) + 404/400 표준 응답
+- [ ] 공통 응답/예외: `ErrorCode` enum + `GlobalExceptionHandler`(@RestControllerAdvice) + 404/400 표준 응답 → **RFC 7807 ProblemDetail 형식으로 재정비**(현행 커스텀 Map 응답 대체)
 - [ ] 기존 API 호환 복구: `GET /api/facilities?type=safety_cctv` 동작 (기존 `/safety-cctv` 엔드포인트 대체)
-- [ ] 단위/통합 테스트 기반: `@DataJpaTest`(로컬 DB 또는 Testcontainers 결정), 컨트롤러 슬라이스 테스트 1개 이상
+- [ ] 단위/통합 테스트 기반: `@DataJpaTest`(**로컬 PG18 직결 `replace=NONE` 결정** — Testcontainers/CI는 0-5·7로 이연), 컨트롤러 슬라이스 테스트 1개 이상
 - [ ] **검증 게이트**: 기동 → `/api/health` → `/api/facilities?type=safety_cctv` 12,085건 응답 확인
 
 ## 0-4. 프론트엔드 재설계
