@@ -5,9 +5,13 @@
 
 # 빌드 산출물 / 캐시
 Back-End/build/
+Back-End/bin/
 Back-End/.gradle/
 frontend/node_modules/
 frontend/dist/
+
+# 작업 노트 / 로컬 전용 계획 문서
+plans/
 
 # IDE
 .idea/
