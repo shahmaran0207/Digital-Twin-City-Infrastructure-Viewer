@@ -12,6 +12,7 @@ frontend/dist/
 
 # 작업 노트 / 로컬 전용 계획 문서
 plans/
+PLAN.md
 
 # IDE
 .idea/
