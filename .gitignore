@@ -18,6 +18,7 @@ PLAN.md
 .idea/
 Back-End/.idea/
 *.iml
+.vscode/
 
 # 대용량 GIS 원천 zip — GitHub 100MB 제한 초과/근접하여 git에 올리지 않음 (출처·재다운로드 방법은 data/SOURCES.md)
 data/한반도.zip
