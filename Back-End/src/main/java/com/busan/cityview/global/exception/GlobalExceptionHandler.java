@@ -1,125 +1,76 @@
 package com.busan.cityview.global.exception;
 
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import jakarta.validation.ConstraintViolationException;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
+import org.springframework.http.ProblemDetail;
+import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * 글로벌 예외 핸들러 (security.md S2 3-4 / V9 에러 처리).
+ * 글로벌 예외 핸들러 — RFC 7807 ProblemDetail 형식으로 응답한다.
+ * (설계 규칙: plans/phase0-redesign.md 4번 / 기존 커스텀 Map 응답을 대체)
  *
- * <p>정책:
- * <ul>
- *   <li>입력 검증 실패(@Valid, @Validated) → 400 + 필드별 오류 목록</li>
- *   <li>경로/쿼리 파라미터 제약 위반(@Min/@Max/@Pattern 등) → 400 + 메시지</li>
- *   <li>타입 불일치(문자열을 숫자 파라미터에) → 400</li>
- *   <li>필수 파라미터 누락 → 400</li>
- *   <li>비즈니스 예외(IllegalArgumentException) → 400</li>
- *   <li>그 외 → 500. 스택트레이스·내부 정보는 절대 응답에 포함하지 않음 (V9)</li>
- * </ul>
- *
- * <p>응답 형식: {@code { "status": 400, "error": "Bad Request", "message": "...", "timestamp": "..." }}
- * <br>검증 실패 시 추가 필드: {@code "details": [ { "field": "...", "message": "..." }, ... ]}
+ * <p>응답 예시:
+ * <pre>
+ * {
+ *   "type": "about:blank",
+ *   "title": "Not Found",
+ *   "status": 404,
+ *   "detail": "facility 999 not found",
+ *   "code": "FACILITY_NOT_FOUND"
+ * }
+ * </pre>
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // ── 1. @Valid / @Validated DTO 검증 실패 ──────────────────────────────────
+    //ErrorCode + 상세 메시지로 ProblemDetail을 만드는 공통 헬퍼.
+    private ProblemDetail toProblemDetail(ErrorCode errorCode, String detail) {
+        ProblemDetail problemDetail =
+                ProblemDetail.forStatusAndDetail(errorCode.getStatus(), detail);
+        problemDetail.setProperty("code", errorCode.name());
+        return problemDetail;
+    }
+
+    //서비스에서 명시적으로 던진 비즈니스 예외
+    @ExceptionHandler(BusinessException.class)
+    public ProblemDetail handleBusinessException(BusinessException ex){
+        return toProblemDetail(ex.getErrorCode(), ex.getMessage());
+    }
+
+    //Valid DTO 검증 실패 — 필드별 오류를 한 문자열로 모아 detail에 담는다
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex) {
-
-        List<Map<String, String>> details = ex.getBindingResult().getFieldErrors().stream()
-                .map(fe -> Map.of(
-                        "field", fe.getField(),
-                        "message", fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "invalid value"
-                ))
-                .toList();
-
-        return badRequest("Validation failed", details);
+    public ProblemDetail handleValidation(MethodArgumentNotValidException ex){
+        String detail = ex.getBindingResult().getFieldErrors().stream()
+                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        return toProblemDetail(ErrorCode.INVALID_PARAMETER, detail);
     }
 
-    // ── 2. @RequestParam / @PathVariable 제약 위반 (@Min/@Max/@Pattern 등) ────
+    //@RequestParam·@PathVariable 제약 위반 (@Min/@Max/@Pattern 등)
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<Map<String, Object>> handleConstraintViolation(
-            ConstraintViolationException ex) {
-
-        List<Map<String, String>> details = ex.getConstraintViolations().stream()
-                .map(cv -> {
-                    // 경로에서 파라미터 이름만 추출 (예: "methodName.paramName" → "paramName")
-                    String path = cv.getPropertyPath().toString();
-                    String param = path.contains(".") ? path.substring(path.lastIndexOf('.') + 1) : path;
-                    return Map.of("field", param, "message", cv.getMessage());
-                })
-                .toList();
-
-        return badRequest("Parameter constraint violation", details);
+    public ProblemDetail handleConstraintViolation(ConstraintViolationException ex){
+        String detail = ex.getConstraintViolations().stream()
+                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+                .collect(Collectors.joining(", "));
+        return toProblemDetail(ErrorCode.INVALID_PARAMETER, detail);
     }
 
-    // ── 3. 파라미터 타입 불일치 (예: limit=abc) ───────────────────────────────
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Map<String, Object>> handleTypeMismatch(
-            MethodArgumentTypeMismatchException ex) {
-
-        String message = String.format("'%s' must be of type %s",
-                ex.getName(),
-                ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown");
-        return badRequest(message, null);
-    }
-
-    // ── 4. 필수 파라미터 누락 ─────────────────────────────────────────────────
+    //필수 파라미터 누락
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<Map<String, Object>> handleMissingParam(
-            MissingServletRequestParameterException ex) {
-
-        return badRequest(
-                String.format("Required parameter '%s' is missing", ex.getParameterName()),
-                null);
+    public ProblemDetail handleMissingParam(MissingServletRequestParameterException ex){
+        return toProblemDetail(ErrorCode.INVALID_PARAMETER,
+                "required parameter '" + ex.getParameterName() + "' is missing");
     }
 
-    // ── 5. 비즈니스 입력 오류 (서비스에서 직접 던지는 경우) ──────────────────
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
-        return badRequest(ex.getMessage(), null);
-    }
-
-    // ── 6. 그 외 모든 예외 → 500. 내부 정보 노출 금지 (V9) ───────────────────
+    //나머지 모든 예외 -> 500
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleAll(Exception ex) {
-        // 로그는 서버 측에서만 남기고, 응답에는 일반 메시지만 반환
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(errorBody(500, "Internal Server Error", "An unexpected error occurred.", null));
-    }
-
-    // ── 헬퍼 ─────────────────────────────────────────────────────────────────
-    private ResponseEntity<Map<String, Object>> badRequest(String message,
-                                                           List<Map<String, String>> details) {
-        return ResponseEntity.badRequest().body(errorBody(400, "Bad Request", message, details));
-    }
-
-    private Map<String, Object> errorBody(int status, String error, String message,
-                                          List<Map<String, String>> details) {
-        if (details != null) {
-            return Map.of(
-                    "status", status,
-                    "error", error,
-                    "message", message,
-                    "details", details,
-                    "timestamp", Instant.now().toString()
-            );
-        }
-        return Map.of(
-                "status", status,
-                "error", error,
-                "message", message,
-                "timestamp", Instant.now().toString()
-        );
+    public ProblemDetail handleAll(Exception ex){
+        log.error("처리되지 않은 예외", ex);
+        return toProblemDetail(ErrorCode.INTERNAL_ERROR, ErrorCode.INTERNAL_ERROR.getMessage());
     }
 }
