@@ -16,6 +16,9 @@ import lombok.Getter;
 @Getter
 public enum ErrorCode {
 
+    //429
+    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "Too many requests"),
+
     //404
     FACILITY_NOT_FOUND(HttpStatus.NOT_FOUND, "Facility not found"),
     FACILITY_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "Facility type not found"),

@@ -29,6 +29,7 @@ dependencies {
       implementation 'org.springframework.boot:spring-boot-starter-web'
       implementation("net.thauvin.erik.httpstatus:httpstatus:2.0.0")
       implementation 'org.hibernate.orm:hibernate-spatial'
+      implementation 'com.bucket4j:bucket4j-core:8.10.1'
       annotationProcessor 'org.projectlombok:lombok'
       runtimeOnly 'org.postgresql:postgresql'
       compileOnly 'org.projectlombok:lombok'
