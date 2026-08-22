@@ -129,3 +129,77 @@
 | 4 | 표준노드링크(부산 추출) | 교통 시뮬레이션 기반 |
 | 5 | 링크소통정보 + BIMS + 기상청 API 키 발급 | 자동승인이라 비용 없음, 실시간 데모 효과 큼 |
 | 6 | 지진해일 대피장소 + SGIS 격자인구 | 대피 시뮬레이션 채택 시 |
+
+---
+
+# E. 범죄예방·자전거 도난방지 확장 (2026-08-20 결정 — Phase 1-C / 4-B)
+
+> 배경: 자전거 도난방지를 시작으로 **범죄예방 레이어 + 필터 기능 + 범죄예측 분석**으로 범위 확장.
+> **핵심 제약**: 범죄 발생 **좌표**는 공개되지 않는다(경찰청 통계는 시군구 단위). 따라서
+> ① 격자 위험도는 환경 요인 기반 **RTM(Risk Terrain Modeling)** 으로 산출하고,
+> ② 그 **가중치**는 시군구×연도 패널 회귀(포아송/음이항)로 정당화한다. → Phase 4-B
+
+## E-1. 자전거 (도난방지 중심)
+
+| 데이터셋 | 출처 | 활용 |
+|---|---|---|
+| 행정안전부_자전거보관소정보 | https://www.data.go.kr/data/15075533/fileData.do | **분석 중심 좌표.** 보관대수·설치형태(개방형/폐쇄형)·설치연도 → 도난 취약도 |
+| 전국자전거대여소표준데이터 | https://www.data.go.kr/data/15017319/standard.do | 공영자전거 대여소 (부산 구·군별 CSV도 존재) |
+| 부산광역시_자전거 도로정보 서비스 | https://www.data.go.kr/data/15058484/openapi.do | 자전거도로 노선 — 링크 데이터(H)와 대조 |
+| 부산 자전거도로/보관대 현황 | https://www.busan.go.kr/depart/ahbicycle01 · https://www.busan.go.kr/depart/ahbrack01 | 시 자체 현황 (원천 보완용) |
+
+## E-2. 방범·치안 시설 (위험 저감 요인)
+
+| 데이터셋 | 출처 | 활용 |
+|---|---|---|
+| 전국안전비상벨위치표준데이터 | https://www.data.go.kr/data/15028206/standard.do | 범죄예방 비상벨 — 설치목적·장소유형 포함 |
+| 전국안심택배함표준데이터 | https://www.data.go.kr/data/15034534/standard.do | 범죄예방용 무인택배함 |
+| 전국보안등정보표준데이터 | https://www.data.go.kr/data/15017320/standard.do | **야간 조도** — 도난·범죄 위험의 핵심 변수 (C절 중복 게재) |
+| 지구대·파출소 위치 | 경찰청 공공데이터 https://www.police.go.kr/www/open/publice/publice01.jsp | 대응 거리(접근성) 변수 |
+| 여성안심귀갓길 | 서울은 개방(https://data.seoul.go.kr/dataList/OA-21697/S/1/datasetView.do) — **부산은 구·군별 개방 여부 확인 필요** | 미개방 시 제외 |
+| 기보유 | 방범CCTV 21,053 / 어린이보호구역 809 | 커버리지 공백 계산 |
+
+## E-3. 범죄 유발 환경 (회귀의 핵심 설명변수)
+
+| 데이터셋 | 출처 | 활용 |
+|---|---|---|
+| **LOCALDATA 지방행정 인허가데이터** | https://www.localdata.go.kr/ | **가장 값어치 있는 항목.** 유흥주점·단란주점·숙박업·PC방·편의점 등 업종별 점포 좌표 전량 → 야간 상권 밀도 |
+| 전국주차장정보표준데이터 | https://www.data.go.kr/data/15012896/standard.do | 주차장 위치/규모 |
+| 전국보행자우선도로표준데이터 | https://www.data.go.kr/data/15028202/standard.do | 보행 안전 축 (링크 데이터 보완) |
+
+## E-4. 인구·유동 (정규화 + 연령 구성 변수)
+
+| 데이터셋 | 출처 | 활용 |
+|---|---|---|
+| SGIS 격자인구(성·연령) | https://sgis.kostat.go.kr/developer/ — `.env`에 `SGIS_ID`/`SGIS_SECRET_KEY` 보유 | 인구 정규화 + **20대 남성 비율** 등 연령 구성 변수 |
+| 부산교통공사 역별 승하차 | https://work.humetro.busan.kr/homepage/default/page/subLocation.do?menu_no=1001040401 | 유동인구 대리지표 |
+| 버스정류장 전체 | 공공데이터포털/BIMS | 유동 접근성 (기보유 smart_shelter 44개는 일부) |
+
+## E-5. 종속변수(y) 후보
+
+| 데이터셋 | 출처 | 비고 |
+|---|---|---|
+| 경찰청_범죄 발생 지역별 통계 | https://www.data.go.kr/data/3074462/fileData.do | **시군구 단위** — 격자 단위 지도학습 불가의 원인 |
+| 경찰청_범죄 발생 장소별 통계 | https://www.data.go.kr/data/3074463/fileData.do | 장소 유형별 분포 — 가중치 설계 근거 |
+| 경찰청 통계자료실 | https://www.police.go.kr/www/open/publice/publice0207.jsp | 다년치 확보(패널 구성용) |
+
+> ⚠️ "범죄유형별 주 가해 연령대" 통계는 **전국 단위 상수**라 지역 변수로 쓸 수 없다.
+> 지역의 **연령 구성비**(E-4)를 설명변수로 넣는 것이 통계적으로 올바른 사용법이다.
+> 해석 시 **생태학적 오류(ecological fallacy)** 를 반드시 명시할 것 — 지역 상관 ≠ 개인 인과.
+
+## E-6. 네트워크 링크 (자전거/보행/PM — A안: 모드 플래그 통합)
+
+| 데이터셋 | 출처 | 활용 |
+|---|---|---|
+| **OpenStreetMap** (`highway=cycleway/footway/path/pedestrian`) | https://download.geofabrik.de/asia/south-korea.html | 자전거·보행 네트워크의 **실질적 유일 대안**. `osm2pgrouting` 적용 가능. 라이선스 **ODbL — 출처 표시 + 동일조건 배포 필수** |
+| 기보유 표준노드링크 | https://www.its.go.kr/nodelink/nodelinkRef | 차량 전용(보유 node 61,121 / link 86,896) |
+
+**A안 구조**: `road_link`에 모드 허용 플래그(`car_allowed`·`bike_allowed`·`foot_allowed`)를 추가하고 OSM 링크를 같은 테이블에 적재 → 네트워크 1개로 3모드 pgRouting.
+**PM(킥보드)**: 전용 네트워크 데이터가 존재하지 않음 → **자전거도로 + 제한속도 이하 차도**로 근사(2026-08-20 결정). 제한속도는 표준노드링크 링크 속성 사용.
+
+## E-7. 수집 시 주의
+
+- 표준데이터는 대부분 **전국본** → 부산 추출 필요 (어린이보호구역 809건 때와 동일 패턴)
+- 좌표 컬럼명·순서가 데이터셋마다 다름 → 기존 `process_data.py`의 **값 범위 기반 lon/lat 자동판별** 재사용
+- 부가 컬럼은 전부 `props`(jsonb)에 한글 키로 보존 — 스키마 변경 없음
+- 신규 유형은 `facility_type`에 행 추가만 하면 API·필터 UI에 자동 반영 (코드 변경 0줄)
