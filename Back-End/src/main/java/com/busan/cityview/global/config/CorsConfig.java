@@ -20,7 +20,8 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
                         .allowedOrigins(allowedOrigins)
-                        .allowedMethods("GET", "POST", "PUT", "DELETE");
+                        // 공개된 것은 GET뿐이다. 쓰기 API 도입 시 그때 추가한다 (security.md 3-5)
+                        .allowedMethods("GET");
             }
         };
     }

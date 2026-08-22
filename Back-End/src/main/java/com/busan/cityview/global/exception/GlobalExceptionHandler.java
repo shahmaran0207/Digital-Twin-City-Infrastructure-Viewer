@@ -1,5 +1,6 @@
 package com.busan.cityview.global.exception;
 
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -72,5 +73,12 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleAll(Exception ex){
         log.error("처리되지 않은 예외", ex);
         return toProblemDetail(ErrorCode.INTERNAL_ERROR, ErrorCode.INTERNAL_ERROR.getMessage());
+    }
+
+    //파라미터 타입 불일치 (예: /facilities/abc, limit=xyz)
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return toProblemDetail(ErrorCode.INVALID_PARAMETER,
+                "'" + ex.getName() + "' has invalid type");
     }
 }
