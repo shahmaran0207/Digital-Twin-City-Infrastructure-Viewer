@@ -98,6 +98,11 @@ DATASETS = [
      'id': None, 'sigungu': None, 'name': '보안등위치명',
      'lon': '경도', 'lat': '위도',
      'sigungu_addr': ['소재지도로명주소', '소재지지번주소']},
+    # 안심택배함: 보안등처럼 구·군별 파일. 설치된 구가 6곳(25건)뿐이라 파일도 6개다.
+    #  시군구명 컬럼이 있어 주소 추출이 필요 없다.
+    {'code': 17, 'glob': '부산광역시_*_안심택배함.csv',
+     'id': None, 'sigungu': '시군구명', 'name': '시설명',
+     'lon': '경도', 'lat': '위도'},
 ]
 # ITS CCTV: shapefile (인코딩 utf-8), 필드 id/name/lng/lat/url
 ITS_ZIP = ('부산광역시 교통정보서비스센터 보유 ITS CCTV 현황.zip', 'tl_tracffic_cctv_info', 12)
