@@ -25,6 +25,9 @@ data/한반도.zip
 data/AL_D1*.zip
 data/*NODELINKDATA.zip
 data/emd_*.zip
+# 소상공인 상가(상권)정보 — 전국 zip 336MB / 부산 CSV 87MB. 가공 결과만 커밋한다
+data/소상공인시장진흥공단_상가*.zip
+data/소상공인시장진흥공단_상가*.csv
 
 # 시뮬레이션/경계 가공 산출물 — 위 gitignore zip에서 'py data/process_sim.py'로 재생성
 #   (building.csv 210MB로 GitHub 100MB 제한 초과 / 전부 파생 산출물이라 git 제외)
