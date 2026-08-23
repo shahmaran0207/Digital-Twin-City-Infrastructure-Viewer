@@ -88,6 +88,16 @@ DATASETS = [
      'id': 'prkplceNo', 'sigungu': None, 'name': 'prkplceNm',
      'lon': 'longitude', 'lat': 'latitude',
      'sigungu_addr': ['rdnmadr', 'lnmadr']},
+    # 아래 2종은 geocode.py(SGIS)가 주소 → 좌표 변환해 만든 파일
+    #  · 지구대·파출소: 원천에 좌표 컬럼이 아예 없다
+    #  · 보안등 보완분: 원천 좌표가 빈 5,287건을 지오코딩으로 회수 (헤더는 원본 보안등 CSV와 동일)
+    {'code': 18, 'file': '지구대파출소_부산광역시_geocoded.csv',
+     'id': None, 'sigungu': None, 'name': '관서명',
+     'lon': '경도', 'lat': '위도', 'sigungu_addr': ['주소']},
+    {'code': 16, 'file': '보안등_좌표보완_부산광역시.csv',
+     'id': None, 'sigungu': None, 'name': '보안등위치명',
+     'lon': '경도', 'lat': '위도',
+     'sigungu_addr': ['소재지도로명주소', '소재지지번주소']},
 ]
 # ITS CCTV: shapefile (인코딩 utf-8), 필드 id/name/lng/lat/url
 ITS_ZIP = ('부산광역시 교통정보서비스센터 보유 ITS CCTV 현황.zip', 'tl_tracffic_cctv_info', 12)
@@ -331,7 +341,7 @@ def process_its():
         return out, stats
 
 
-def main(only_codes=None):
+def main(only_codes=None, only_file=None):
     """only_codes가 주어지면 그 유형만 가공해 facility_add.csv로 뽑는다(증분 적재용).
 
     전체 재가공(facility_all.csv)은 DB를 TRUNCATE 후 다시 넣어야 해서 기존 21만 행의
@@ -341,6 +351,10 @@ def main(only_codes=None):
     all_rows, all_stats = [], []
     for meta in DATASETS:
         if only_codes and meta['code'] not in only_codes:
+            continue
+        # code 16(보안등)처럼 한 유형에 메타가 둘 이상인 경우가 있다
+        # (원본 구·군별 glob + 지오코딩 보완분). --file로 하나만 골라 중복 적재를 막는다.
+        if only_file and meta.get('file') != only_file:
             continue
         rows, stats = process_meta(meta)
         all_rows.extend(rows)
@@ -438,8 +452,11 @@ if __name__ == '__main__':
     # 사용법:
     #   python process_data.py                 전체 재가공 → processed/facility_all.csv
     #   python process_data.py --codes 13,15   해당 유형만 → processed/facility_add.csv (증분)
+    #   python process_data.py --codes 16 --file 보안등_좌표보완_부산광역시.csv
+    #                                        같은 code에 메타가 여러 개일 때 하나만 처리
     import sys
     codes = None
     if '--codes' in sys.argv:
         codes = {int(c) for c in sys.argv[sys.argv.index('--codes') + 1].split(',')}
-    main(codes)
+    only_file = sys.argv[sys.argv.index('--file') + 1] if '--file' in sys.argv else None
+    main(codes, only_file)
