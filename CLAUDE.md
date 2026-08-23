@@ -68,10 +68,12 @@
 
 ## 문서 체계
 - **README.md** — 프로젝트 최상위 기준
-- **PLAN.md** — 전체 계획 + 진행 상태. 단계 완료 시 체크박스 갱신 필수
-- **plans/** — 작업 단위별 세부 계획 (설계 결정은 plans/phase0-redesign.md 기준)
-- **plans/java-syntax.md**, **plans/postgis-syntax.md** — 새로 등장한 문법·패턴 정리. 학습 대상 문법이 나오면 여기에 섹션 추가
-- 참고: `PLAN.md`와 `plans/`는 gitignore 대상(로컬 전용)
+- **PLAN.md** — 전체 계획 + 진행 상태. 단계 완료 시 체크박스 갱신 필수. **API 설계 규칙은 0-1 절에 있음**
+- **plans/security.md** — 보안 구현 노트. 보안 판단이 나올 때마다 "무엇을/왜/어떻게 확인했는지" 한 항목씩 추가
+- **plans/java-syntax.md** — 새로 등장한 Java 문법·패턴 정리. 학습 대상 문법이 나오면 여기에 섹션 추가
+- **plans/crime-prediction.md** — 범죄예측 분석 설계 (Phase 4-B)
+- 참고: `PLAN.md`와 `plans/`는 gitignore 대상(로컬 전용) — **git에 백업이 없으므로 삭제 시 복구가 어렵다**
+  - 2026-08-23 `PLAN.md`·`plans/` 다수가 삭제됨. `PLAN.md`만 히스토리에서 복구하고 나머지는 폐기(`phase0-redesign.md`의 설계 규칙은 PLAN.md 0-1로 흡수). 옛 버전이 필요하면 `git show 4e0ff51^:plans/파일명`
 
 ## AI 협업 원칙 (사용자가 주도권을 갖기 위한 규칙)
 
