@@ -13,6 +13,7 @@ facility 포인트 13종 1차 가공 (Phase 1-R 재작업)
 실행: py data/process_data.py
 """
 import csv
+import glob
 import io
 import json
 import os
@@ -60,6 +61,33 @@ DATASETS = [
      'id': None, 'sigungu': None, 'name': '대상시설명',
      'lon': '경도', 'lat': '위도', 'region': '소재지도로명주소',
      'sigungu_addr': '소재지도로명주소'},
+    # ── Phase 1-C: 범죄예방·자전거 확장 (2026-08-23) ─────────────────────
+    #  · 표준데이터는 좌표 컬럼명이 명시적(WGS84위도/경도)이고 끝 2컬럼이 아니라 lon/lat 지정
+    #  · 시군구 컬럼이 없어 도로명주소에서 추출
+    #  · 포털에서 부산으로 이미 걸러 받았으므로 region(부산 필터) 불필요
+    {'code': 13, 'file': '자전거보관소정보_부산광역시.csv',
+     'id': '관리번호', 'sigungu': None, 'name': '자전거보관소명',
+     'lon': 'WGS84경도', 'lat': 'WGS84위도',
+     'sigungu_addr': ['소재지도로명주소', '소재지지번주소']},
+    {'code': 15, 'file': '안전비상벨위치정보_부산광역시.csv',
+     'id': '관리번호', 'sigungu': None, 'name': '설치위치',
+     'lon': 'WGS84경도', 'lat': 'WGS84위도',
+     'sigungu_addr': ['소재지도로명주소', '소재지지번주소']},
+    # 보안등: 전국본이 184만 건이라 API·전국 CSV 대신 포털에서 구·군별로 받았다 → 16개 파일을 glob으로 합침
+    {'code': 16, 'glob': '부산광역시_*_보안등정보.csv',
+     'id': None, 'sigungu': None, 'name': '보안등위치명',
+     'lon': '경도', 'lat': '위도',
+     'sigungu_addr': ['소재지도로명주소', '소재지지번주소']},
+    # 아래 2종은 fetch_api.py가 표준데이터 API에서 받아 저장한 것 → 헤더가 API 필드명(영문)
+    #  한글 라벨을 임의로 붙이면 실제 의미와 어긋날 위험이 있어 영문 그대로 둔다(props 키도 영문)
+    {'code': 14, 'file': '자전거대여소_부산광역시_api.csv',
+     'id': None, 'sigungu': None, 'name': 'bcyclLendNm',
+     'lon': 'longitude', 'lat': 'latitude',
+     'sigungu_addr': ['rdnmadr', 'lnmadr']},
+    {'code': 22, 'file': '주차장_부산광역시_api.csv',
+     'id': 'prkplceNo', 'sigungu': None, 'name': 'prkplceNm',
+     'lon': 'longitude', 'lat': 'latitude',
+     'sigungu_addr': ['rdnmadr', 'lnmadr']},
 ]
 # ITS CCTV: shapefile (인코딩 utf-8), 필드 id/name/lng/lat/url
 ITS_ZIP = ('부산광역시 교통정보서비스센터 보유 ITS CCTV 현황.zip', 'tl_tracffic_cctv_info', 12)
@@ -102,8 +130,31 @@ def read_csv(path):
     return header, rows
 
 
+# 부산 16개 구·군. 긴 이름부터 매칭해야 한다('강서구'가 '서구'보다 먼저 걸려야 함)
+BUSAN_SIGUNGU = sorted(
+    ['중구', '서구', '동구', '영도구', '부산진구', '동래구', '남구', '북구',
+     '해운대구', '사하구', '금정구', '강서구', '연제구', '수영구', '사상구', '기장군'],
+    key=len, reverse=True)
+
+
 def sigungu_from_addr(addr):
-    """도로명/지번 주소에서 시군구 추출. '부산광역시 해운대구 …' → '해운대구'."""
+    """주소에서 부산 구·군 추출.
+
+    split()[1]만 쓰면 세 가지를 놓친다(2026-08-23 발견):
+      · '부산광역시 동구망양로 12' — 공백이 빠져 '동구망양로'가 나온다
+      · 도로명주소가 빈 행 — 지번주소로 넘어가야 한다(호출부에서 처리)
+      · '부산광역시 기장ㅇ군 …' — 원천 주소에 자모(ㅇ)가 끼어든 오타
+    그래서 16개 구·군 화이트리스트로 찾고, 실패하면 자모를 제거해 한 번 더 찾는다.
+    """
+    for sgg in BUSAN_SIGUNGU:
+        if sgg in addr:
+            return sgg
+    # 한글 자모(ㄱ~ㅣ)가 섞인 오타 교정 후 재시도
+    cleaned = ''.join(ch for ch in addr if not ('ㄱ' <= ch <= 'ㅣ'))
+    if cleaned != addr:
+        for sgg in BUSAN_SIGUNGU:
+            if sgg in cleaned:
+                return sgg
     parts = addr.split()
     return parts[1] if len(parts) >= 2 else ''
 
@@ -126,7 +177,11 @@ def process_csv(meta):
         lon_lat_idx = {ncol - 2, ncol - 1}
     # 부산 필터용 주소 컬럼 / 시군구 추출용 주소 컬럼 (전국 표준데이터 대응)
     region_i = idx(meta.get('region'))
-    sgg_addr_i = idx(meta.get('sigungu_addr'))
+    # 시군구 추출용 주소 컬럼: 여러 개를 순서대로 시도한다(도로명주소가 빈 행은 지번주소로)
+    sgg_addr_cols = meta.get('sigungu_addr')
+    if isinstance(sgg_addr_cols, str):
+        sgg_addr_cols = [sgg_addr_cols]
+    sgg_addr_idx = [idx(c) for c in (sgg_addr_cols or []) if idx(c) is not None]
     # props 대상: 좌표/source_id/sigungu/name 을 제외한 나머지 컬럼 (주소는 props에 보존)
     skip = set(lon_lat_idx)
     for i in (id_i, sgg_i, name_i):
@@ -156,8 +211,12 @@ def process_csv(meta):
         source_id = r[id_i].strip() if id_i is not None else ''
         if sgg_i is not None:
             sigungu = r[sgg_i].strip()
-        elif sgg_addr_i is not None:
-            sigungu = sigungu_from_addr(r[sgg_addr_i].strip())
+        elif sgg_addr_idx:
+            sigungu = ''
+            for i in sgg_addr_idx:          # 앞 컬럼에서 못 찾으면 다음 주소 컬럼으로
+                sigungu = sigungu_from_addr(r[i].strip())
+                if sigungu:
+                    break
         else:
             sigungu = ''
         name = r[name_i].strip() if name_i is not None else ''
@@ -172,6 +231,79 @@ def process_csv(meta):
     if region_i is not None:
         stats['total'] = considered
     return out, stats
+
+
+# ── 상권정보(소상공인시장진흥공단) → 심야업소 3종 ─────────────────────────
+#  파일 하나에서 업종별로 3개 facility_type을 뽑아내므로 process_csv를 쓰지 않는다.
+#  · 인코딩: UTF-8 (BOM 없음) — read_csv의 cp949 기본값과 달라 직접 읽는다
+#  · 39개 컬럼 전부를 props에 넣으면 9천 행에 코드 컬럼까지 쌓여 비대해지므로 선별한다
+SANGGA_FILE = '소상공인시장진흥공단_상가(상권)정보_부산_202606.csv'
+SANGGA_GROUPS = {
+    # code: (포함할 상권업종소분류명 집합, 제외 근거는 REPORT/커밋 메시지에 기록)
+    19: {'일반 유흥 주점', '무도 유흥 주점', '요리 주점'},   # 펜션·전자게임장은 성격이 달라 제외
+    20: {'여관/모텔', '호텔/리조트', '그 외 기타 숙박업'},   # 펜션 제외(관광지 분포)
+    21: {'PC방'},                                            # 전자 게임장 제외(별 업종)
+}
+SANGGA_PROPS = ['상권업종대분류명', '상권업종중분류명', '상권업종소분류명', '지점명',
+                '행정동명', '법정동명', '도로명주소', '지번주소', '건물명', '층정보']
+
+
+def process_sangga():
+    """상권정보 부산 CSV → code 19/20/21 행 생성. (rows, stats리스트) 반환."""
+    path = os.path.join(BASE, SANGGA_FILE)
+    code_of = {sub: code for code, subs in SANGGA_GROUPS.items() for sub in subs}
+
+    out = []
+    stats = {code: {'file': SANGGA_FILE, 'code': code, 'total': 0, 'kept': 0,
+                    'dropped': 0, 'drop_lines': []} for code in SANGGA_GROUPS}
+    with open(path, encoding='utf-8') as f:
+        for n, r in enumerate(csv.DictReader(f)):
+            code = code_of.get((r.get('상권업종소분류명') or '').strip())
+            if code is None:
+                continue
+            st = stats[code]
+            st['total'] += 1
+            coord = pick_lon_lat(r.get('경도', ''), r.get('위도', ''))
+            if coord is None:
+                st['dropped'] += 1
+                if len(st['drop_lines']) < 3:
+                    st['drop_lines'].append(
+                        f"line {n + 2}: {r.get('상호명')} / {r.get('경도')},{r.get('위도')}")
+                continue
+            lon, lat = coord
+            props = {k: r[k].strip() for k in SANGGA_PROPS if r.get(k, '').strip()}
+            out.append((code, (r.get('상가업소번호') or '').strip(),
+                        (r.get('시군구명') or '').strip(), (r.get('상호명') or '').strip(),
+                        f'{lon:.7f}', f'{lat:.7f}',
+                        json.dumps(props, ensure_ascii=False)))
+            st['kept'] += 1
+    return out, [stats[c] for c in sorted(stats)]
+
+
+def process_meta(meta):
+    """DATASETS 항목 하나 처리. glob이 지정되면 여러 파일을 한 유형으로 합친다.
+
+    보안등은 포털이 구·군별로만 내려줘서 파일이 16개다(전국본 184만 건 회피).
+    파일이 늘어도 DATASETS 항목은 하나로 유지하기 위해 glob을 지원한다.
+    """
+    pattern = meta.get('glob')
+    if not pattern:
+        return process_csv(meta)
+
+    files = sorted(glob.glob(os.path.join(BASE, pattern)))
+    if not files:
+        raise SystemExit(f'파일 없음: {pattern}')
+    rows = []
+    agg = {'file': f'{pattern} ({len(files)}개 파일)', 'code': meta['code'],
+           'total': 0, 'kept': 0, 'dropped': 0, 'drop_lines': []}
+    for path in files:
+        r, s = process_csv(dict(meta, file=os.path.basename(path)))
+        rows.extend(r)
+        agg['total'] += s['total']
+        agg['kept'] += s['kept']
+        agg['dropped'] += s['dropped']
+        agg['drop_lines'].extend(s['drop_lines'][:1])   # 파일당 샘플 1건만
+    return rows, agg
 
 
 def process_its():
@@ -199,20 +331,71 @@ def process_its():
         return out, stats
 
 
-def main():
+def main(only_codes=None):
+    """only_codes가 주어지면 그 유형만 가공해 facility_add.csv로 뽑는다(증분 적재용).
+
+    전체 재가공(facility_all.csv)은 DB를 TRUNCATE 후 다시 넣어야 해서 기존 21만 행의
+    id가 전부 바뀐다. 나중에 블록체인 앵커링이 레코드 해시를 다루므로 id는 안정적인 게
+    좋다 → 신규 유형은 증분으로 append 한다.
+    """
     all_rows, all_stats = [], []
     for meta in DATASETS:
-        rows, stats = process_csv(meta)
+        if only_codes and meta['code'] not in only_codes:
+            continue
+        rows, stats = process_meta(meta)
         all_rows.extend(rows)
         all_stats.append(stats)
         print(f"[{stats['code']:>2}] {stats['file']}: "
               f"{stats['total']} -> {stats['kept']} (제거 {stats['dropped']})")
 
-    rows, stats = process_its()
-    all_rows.extend(rows)
-    all_stats.append(stats)
-    print(f"[12] {stats['file']}: {stats['total']} -> {stats['kept']} "
-          f"(제거 {stats['dropped']})")
+    if not only_codes or 12 in only_codes:
+        rows, stats = process_its()
+        all_rows.extend(rows)
+        all_stats.append(stats)
+        print(f"[12] {stats['file']}: {stats['total']} -> {stats['kept']} "
+              f"(제거 {stats['dropped']})")
+
+    # 상권정보: 파일 하나 → code 19/20/21
+    if not only_codes or only_codes & set(SANGGA_GROUPS):
+        rows, stats_list = process_sangga()
+        wanted = only_codes or set(SANGGA_GROUPS)
+        rows = [r for r in rows if r[0] in wanted]
+        all_rows.extend(rows)
+        for s in stats_list:
+            if s['code'] in wanted:
+                all_stats.append(s)
+                print(f"[{s['code']:>2}] 상권정보({s['code']}): "
+                      f"{s['total']} -> {s['kept']} (제거 {s['dropped']})")
+
+    if only_codes:
+        out_csv = os.path.join(OUT_DIR, 'facility_add.csv')
+        with open(out_csv, 'w', encoding='utf-8-sig', newline='') as f:
+            w = csv.writer(f)
+            w.writerow(['facility_type', 'source_id', 'sigungu', 'name', 'lon', 'lat', 'props'])
+            w.writerows(all_rows)
+        print(f"\n=> {out_csv} ({len(all_rows)} rows, 증분)")
+        for s in all_stats:
+            print(f"   code {s['code']}: {s['total']} -> {s['kept']} (제거 {s['dropped']})")
+            for l in s['drop_lines']:
+                print(f"     {l}")
+
+        # 증분 이력을 REPORT.md 하단에 append (전체 재가공 때만 REPORT를 다시 쓰므로
+        # 증분분이 기록되지 않는 빈틈을 메운다)
+        report = os.path.join(OUT_DIR, 'REPORT.md')
+        with open(report, 'a', encoding='utf-8') as f:
+            f.write('\n\n## 증분 적재 이력\n\n')
+            f.write(f'`--codes {",".join(str(c) for c in sorted(only_codes))}` 실행 결과 '
+                    f'→ `facility_add.csv` ({len(all_rows)}행)\n\n')
+            f.write('| 코드 | 파일 | 원본 행 | 적재 행 | 제거 |\n|---|---|---|---|---|\n')
+            for s in all_stats:
+                f.write(f"| {s['code']} | {s['file']} | {s['total']} | {s['kept']} | {s['dropped']} |\n")
+            f.write('\n제거된 행은 전부 원천 좌표 오류(부산 범위 밖):\n\n```\n')
+            for s in all_stats:
+                for l in s['drop_lines']:
+                    f.write(f"[code {s['code']}] {l}\n")
+            f.write('```\n')
+        print(f"=> {report} (증분 이력 추가)")
+        return
 
     # 통합 CSV (DB \copy 용, UTF-8 BOM — 엑셀 한글 깨짐 방지, psql은 HEADER 스킵)
     out_csv = os.path.join(OUT_DIR, 'facility_all.csv')
@@ -252,4 +435,11 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # 사용법:
+    #   python process_data.py                 전체 재가공 → processed/facility_all.csv
+    #   python process_data.py --codes 13,15   해당 유형만 → processed/facility_add.csv (증분)
+    import sys
+    codes = None
+    if '--codes' in sys.argv:
+        codes = {int(c) for c in sys.argv[sys.argv.index('--codes') + 1].split(',')}
+    main(codes)
