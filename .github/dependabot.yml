@@ -2,14 +2,26 @@
 # 백엔드(gradle) + 프론트(npm) + GitHub Actions 자체 버전을 주기적으로 점검해
 # 알려진 CVE·구버전을 PR로 올린다. 백엔드 OWASP Dependency-Check는 NVD 키·CI 부하 부담이 커
 # 도입하지 않고, gradle 생태계 업데이트를 이 Dependabot으로 대체한다.
+#
+# 2026-08-24 조정 — 메이저 무시 + 주기 완화
+#   증상: weekly로 돌면서 매번 8~13개 PR이 열려 origin 브랜치 목록이 뒤덮였다.
+#         7월에 13개를 닫았는데 새 버전이 나오자 다시 열렸고, 그중 대부분이 메이저였다
+#         (Boot 3→4, Vite 7→8, @types/node 24→26, gradle-wrapper 8→9 …).
+#   방침: 메이저는 PLAN Phase 7에서 **호환성 확인과 함께 개별 적용**하기로 이미 정했다.
+#         그러니 메이저 PR은 애초에 열지 않는다.
+#   보안: 메이저를 무시해도 **Dependabot security updates(취약점 경보 기반 PR)는
+#         이 설정과 무관하게 열린다.** CVE 대응은 그대로 유지된다.
 version: 2
 updates:
   # 백엔드 — Spring Boot 등 gradle 의존성
   - package-ecosystem: gradle
     directory: /Back-End
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
+      interval: monthly
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     commit-message:
       prefix: "deps(backend)"
 
@@ -17,8 +29,11 @@ updates:
   - package-ecosystem: npm
     directory: /frontend
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
+      interval: monthly
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     commit-message:
       prefix: "deps(frontend)"
 
@@ -26,7 +41,10 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
+      interval: monthly
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     commit-message:
       prefix: "deps(ci)"
