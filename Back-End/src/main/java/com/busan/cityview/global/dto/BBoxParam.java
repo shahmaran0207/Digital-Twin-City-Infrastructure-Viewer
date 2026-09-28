@@ -1,4 +1,4 @@
-package com.busan.cityview.domain.facility.dto;
+package com.busan.cityview.global.dto;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
