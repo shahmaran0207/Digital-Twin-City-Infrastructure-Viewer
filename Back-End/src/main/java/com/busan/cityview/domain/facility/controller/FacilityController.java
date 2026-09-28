@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.busan.cityview.global.exception.BusinessException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
-import com.busan.cityview.domain.facility.dto.BBoxParam;
 import com.busan.cityview.global.exception.ErrorCode;
 import com.busan.cityview.global.dto.ListResponse;
+import com.busan.cityview.global.dto.BBoxParam;
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
 
