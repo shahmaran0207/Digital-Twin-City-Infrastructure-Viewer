@@ -1,12 +1,12 @@
 package com.busan.cityview.domain.facility.entity;
 
-import io.hypersistence.utils.hibernate.type.json.JsonType;
+import org.hibernate.annotations.JdbcTypeCode;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import org.hibernate.annotations.Type;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.FetchType;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -23,7 +23,7 @@ import java.util.Map;
  * <ul>
  *   <li>id: DB가 IDENTITY로 자동 증가 → GenerationType.IDENTITY</li>
  *   <li>facilityType: category 조인 조회를 위해 int 컬럼이 아니라 @ManyToOne 엔티티로 매핑</li>
- *   <li>props: jsonb ↔ Map 매핑 (hypersistence JsonType)</li>
+ *   <li>props: jsonb ↔ Map 매핑 (Hibernate 네이티브 {@code @JdbcTypeCode(SqlTypes.JSON)})</li>
  *   <li>geom: DB의 GENERATED 컬럼이라 매핑하지 않는다. 좌표는 lon/lat로만 다룬다.</li>
  * </ul>
  */
@@ -65,7 +65,7 @@ public class FacilityEntity {
     private Double lat;
 
     /** 시설물별 추가 속성 (jsonb ↔ Map). 예: ITS CCTV 스트림 url */
-    @Type(JsonType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "props", columnDefinition = "jsonb")
     private Map<String, Object> props;
 }
