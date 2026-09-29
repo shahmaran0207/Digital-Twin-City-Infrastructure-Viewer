@@ -22,8 +22,12 @@ repositories {
 }
 
 dependencies {
+      // Boot 4부터 테스트 슬라이스가 기술별 모듈로 분리돼 starter-test가 끌어오지 않는다.
+      // 쓰는 것만 명시 — @DataJpaTest / @WebMvcTest·MockMvc.
+      // (전부 묶인 starter-test-classic도 있으나 안 쓰는 슬라이스까지 딸려온다)
       testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
       testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+      // springdoc 3.x = Spring Boot 4 대응 라인 (2.x는 Boot 3 대상이라 함께 올려야 한다)
       implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1'
       implementation 'org.springframework.boot:spring-boot-starter-validation'
       implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -36,6 +40,13 @@ dependencies {
       annotationProcessor 'org.projectlombok:lombok'
       runtimeOnly 'org.postgresql:postgresql'
       compileOnly 'org.projectlombok:lombok'
+
+      // 제거된 의존성 — io.hypersistence:hypersistence-utils-hibernate-63 (2026-09-29)
+      //   jsonb ↔ Map 매핑을 Hibernate 네이티브 @JdbcTypeCode(SqlTypes.JSON)으로 대체했다
+      //   (FacilityEntity.props, 사용처는 그 한 곳뿐이었다).
+      //   이 라이브러리는 Hibernate 마이너 버전마다 artifact 이름이 달라(-63/-70/-71…)
+      //   업그레이드할 때마다 걸림돌이 됐다. Hibernate 6.2가 같은 기능을 흡수했으므로
+      //   되살리지 말 것. 상세: plans/java-syntax.md 18-1
 }
 
 tasks.named('test') {
