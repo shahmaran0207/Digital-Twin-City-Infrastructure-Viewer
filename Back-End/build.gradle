@@ -1,15 +1,17 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.16'
+    id 'org.springframework.boot' version '4.1.1'
     id 'io.spring.dependency-management' version '1.1.4'
 }
 
-group = 'com.example'
+group = 'com.busan.cityview'
 version = '0.0.1-SNAPSHOT'
 
 java {
     // 환경 기본 JDK(현재 26)와 무관하게 컴파일 JDK를 17로 고정
     // — Lombok 1.18.30(Boot 3.2.1 BOM)이 JDK 26 javac 내부 API를 지원하지 않아 compileJava가 깨짐
+    // 2026-09-29 Boot 4.1.1로 올리면서도 17 유지. Boot 4.1이 Java 17~26을 지원하므로 올릴 이유가 없고,
+    // JDK를 함께 올리면 업그레이드가 깨졌을 때 원인이 프레임워크인지 JDK인지 가려내기 어려워진다.
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
@@ -20,8 +22,9 @@ repositories {
 }
 
 dependencies {
-      implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.9.1'
-      implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.7.3'
+      testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+      testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+      implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1'
       implementation 'org.springframework.boot:spring-boot-starter-validation'
       implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
       implementation 'org.springframework.boot:spring-boot-starter-security'

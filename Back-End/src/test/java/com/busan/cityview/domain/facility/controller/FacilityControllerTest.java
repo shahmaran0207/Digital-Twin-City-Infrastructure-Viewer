@@ -3,16 +3,16 @@ package com.busan.cityview.domain.facility.controller;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import com.busan.cityview.domain.facility.dto.FacilityPointResponse;
 import com.busan.cityview.domain.facility.service.FacilityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.busan.cityview.global.exception.BusinessException;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.web.servlet.MockMvc;
 import com.busan.cityview.global.exception.ErrorCode;
 import static org.mockito.ArgumentMatchers.anyString;
+import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyInt;
 import com.busan.cityview.global.dto.ListResponse;
@@ -36,7 +36,9 @@ public class FacilityControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    // Boot 4에서 @MockBean이 제거됨 → spring-test의 @MockitoBean으로 대체
+    // (Boot 3.4에서 deprecated, 4.0에서 삭제. 동작·용도는 동일하다)
+    @MockitoBean
     private FacilityService facilityService;
 
     @Test

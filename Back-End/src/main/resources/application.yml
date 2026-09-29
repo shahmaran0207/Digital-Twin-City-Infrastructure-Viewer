@@ -18,10 +18,10 @@ spring:
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:}
 
-  jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+  # hibernate.dialect를 명시하지 않는다 (2026-09-29 제거).
+  # Hibernate 7이 기동 때 경고한다 — HHH90000025: "PostgreSQLDialect는 명시할 필요가 없다.
+  # 제거하면 기본으로 선택된다". 드라이버가 알려주는 것을 손으로 고정하면
+  # DB를 올릴 때(PG18→19 등) 방언만 옛 버전에 묶이는 함정이 생긴다.
 
   jackson:
     time-zone: Asia/Seoul
