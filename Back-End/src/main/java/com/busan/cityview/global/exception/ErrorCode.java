@@ -22,6 +22,9 @@ public enum ErrorCode {
     //404
     FACILITY_NOT_FOUND(HttpStatus.NOT_FOUND, "Facility not found"),
     FACILITY_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "Facility type not found"),
+    // 격자 id가 없거나, 그 격자에 해당 crime_type 점수가 없는 경우 둘 다 이 코드를 쓴다.
+    // 프론트가 구분할 실익이 없고(둘 다 "그 격자 데이터 없음"), 나누면 내부 구조가 드러난다.
+    VULNERABILITY_GRID_NOT_FOUND(HttpStatus.NOT_FOUND, "Vulnerability grid not found"),
 
     //400
     INVALID_PARAMETER(HttpStatus.BAD_REQUEST, "Invalid request parameter"),
